@@ -1,76 +1,11 @@
 (ns alc.index-defs.core
   (:require
+   [alc.index-defs.analyze :as aia]
    [alc.index-defs.bin :as aib]
    [alc.index-defs.fs :as aif]
    [alc.index-defs.seek :as ais]
    [alc.index-defs.table :as ait]
    [alc.index-defs.unzip :as aiu]))
-
-(defn load-lint
-  [path]
-  (-> path
-    slurp
-    read-string))
-
-;; load-lint is supposed to read in something like the following
-(comment
-  
-  ;; structure of analysis data:
-  ;;
-  ;;   https://github.com/borkdude/clj-kondo/tree/
-  ;;     120dd79bf3982c580e7784a41795853b44c9e4b0/analysis#user-content-data
-  ;;
-  {:findings [] ; not usually empty in practice
-   :summary {} ; not usually empty in practice
-   :analysis
-   {:namespace-definitions
-    [{:filename (str (System/getenv "HOME")
-                  "/src/antoine/src/antoine/renderer.cljs")
-      :row 1
-      :col 1
-      :name antoine.renderer}
-     {:filename (str (System/getenv "HOME")
-                  "/.m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-                  ":"
-                  "com/wsscode/pathom/parser.cljc")
-      :row 1
-      :col 1
-      :name com.wsscode.pathom.parser
-      :lang :clj}]
-    :namespace-usages
-    [{:filename (str (System/getenv "HOME")
-                  "/src/antoine/src/antoine/renderer.cljs")
-      :row 3
-      :col 5
-      :from antoine.renderer
-      :to clojure.core.async}]
-    :var-definitions
-    [{:filename (str (System/getenv "HOME")
-                  "/.m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-                  ":"
-                  "com/wsscode/pathom/parser.cljc")
-      :row 13
-      :col 1
-      :ns com.wsscode.pathom.parser
-      :name expr->ast
-      :lang :clj}]
-    :var-usages
-    [{:name defmacro
-      :var-args-min-arity 2
-      :lang :cljs
-      :filename (str (System/getenv "HOME")
-                  "/.m2/repository/org/clojure/clojurescript/1.10.520/"
-                  "clojurescript-1.10.520.jar"
-                  ":"
-                  "cljs/spec/gen/alpha.cljc")
-      :from cljs.spec.gen.alpha
-      :macro true
-      :col 1
-      :arity 4
-      :row 62
-      :to cljs.core}]}}
-              
-  )
 
 ;; XXX: move into another file?
 ;; XXX: use of relative paths might make TAGS file portable?
@@ -228,52 +163,111 @@
   
   )
 
-;; XXX: consider verbose mode for reporting progress as well as timing info
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
 ;;      along with the "include" directive might be intereseting
 (defn main
-  [lint-path proj-root]
-  (let [analysis (:analysis (load-lint lint-path))
-        unzip-root (str proj-root "/.alc-id/unzip")
-        ;; ensure unzip-root dir exists
-        _ (assert (aif/ensure-dir (java.io.File. unzip-root))
-            (str "failed to create unzip-root: " unzip-root))
-        ;; add visit-path info to def entries 
-        new-ns-defs (process-paths (:namespace-definitions analysis)
-                      unzip-root)
-        new-var-defs (process-paths (:var-definitions analysis)
-                       unzip-root)
-        all-defs (concat new-ns-defs new-var-defs)
-        ;; unzip all jars
-        _ (doseq [jar-path (->> all-defs ; all distinct jar paths
-                             (keep (fn [{:keys [jar-path]}]
-                                     jar-path))
-                             distinct)]
-            (aiu/unzip-jar jar-path unzip-root))
-        ;; collect def entries by the file they live in
-        defs-by-visit-path (make-path-to-defs-table all-defs)
-        table-path (str proj-root "/TAGS")]
-    ;; for each file with def entries, prepare a section and write it out
-    (doseq [[f-path def-entries] defs-by-visit-path]
-      ;;(println f-path)
-      (let [tag-input-entries
-            (keep #(make-tag-input-entry-from-src (slurp f-path) %)
-              def-entries)
-            _ (assert (not (nil? tag-input-entries))
-                (str "failed to prepare tag input entries for: " f-path))
-            ;;_ (println (first tag-input-entries))
-            section (aib/make-section {:file-path f-path
-                                       :entries tag-input-entries})
-            _ (assert (not (nil? section))
-                (str "failed to prepare section for: " f-path))]
-        ;; (println (str "writing for: " f-path))
-        (ait/write-tags table-path section)))))
+  ([proj-root]
+   (main proj-root nil))
+  ([proj-root {:keys [:lint-path :overwrite :verbose]
+               :or {overwrite false
+                    verbose true}}]
+   (when verbose
+     (println "[alc.index-defs - index file creator]"))
+   (let [table-path (str proj-root "/TAGS")
+         tags-file (java.io.File. table-path)]
+     (if (not overwrite)
+       (assert (not (.exists tags-file))
+         (str "TAGS already exists for: " proj-root))
+       (when (.exists tags-file)
+         (let [result (.delete tags-file)]
+           (assert result
+             (str "failed to remove TAGS file for: " proj-root)))))
+     (let [start-time (System/currentTimeMillis)
+           analysis (if lint-path
+                      (:analysis (aia/load-lint lint-path))
+                      (let [lint (aia/study-project-and-deps proj-root
+                                   {:verbose verbose})]
+                        (assert lint
+                          (str "analysis failed"))
+                        (:analysis lint)))
+           post-analysis-time (System/currentTimeMillis)
+           ;;
+           unzip-root (str proj-root "/.alc-id/unzip")
+           ;; ensure unzip-root dir exists
+           _ (assert (aif/ensure-dir (java.io.File. unzip-root))
+               (str "failed to create unzip-root: " unzip-root))
+           ;; add visit-path info to def entries 
+           new-ns-defs (process-paths (:namespace-definitions analysis)
+                         unzip-root)
+           new-var-defs (process-paths (:var-definitions analysis)
+                          unzip-root)
+           all-defs (concat new-ns-defs new-var-defs)
+           ;; unzip all jars
+           _ (when verbose
+               (println (str "* unzipping jars...")))
+           _ (doseq [jar-path (->> all-defs ; all distinct jar paths
+                                (keep (fn [{:keys [jar-path]}]
+                                        jar-path))
+                                distinct)]
+               (aiu/unzip-jar jar-path unzip-root))
+           _ (when verbose
+               (println (str "  duration: "
+                          (- (System/currentTimeMillis) post-analysis-time)
+                          " ms")))
+           post-unzip-time (System/currentTimeMillis)
+           ;; collect def entries by the file they live in
+           defs-by-visit-path (make-path-to-defs-table all-defs)]
+       ;; for each file with def entries, prepare a section and write it out
+       (when verbose
+         (println (str "* writing TAGS file...")))
+       (doseq [[f-path def-entries] defs-by-visit-path]
+         ;;(println f-path)
+         (let [tag-input-entries
+               (keep #(make-tag-input-entry-from-src (slurp f-path) %)
+                 def-entries)
+               _ (assert (not (nil? tag-input-entries))
+                   (str "failed to prepare tag input entries for: " f-path))
+               ;;_ (println (first tag-input-entries))
+               section (aib/make-section {:file-path f-path
+                                          :entries tag-input-entries})
+               _ (assert (not (nil? section))
+                   (str "failed to prepare section for: " f-path))]
+           ;; (println (str "writing for: " f-path))
+           (ait/write-tags table-path section)))
+       (let [duration (- (System/currentTimeMillis) start-time)]
+         (when verbose
+           (println (str "  duration: "
+                      (- (System/currentTimeMillis) post-analysis-time)
+                      " ms"))
+           (println (str "-------------------------"))
+           (println (str "total duration: " duration " ms"))))))))
 
 ;; XXX: running main with an out-of-date lint data file may cause
 ;;      problems.  e.g. the current code doesn't try to guard against if
 ;;      files are shorter or out-of-sync with the analysis.  this could
 ;;      be made more robust -- perhaps warnings should be emitted at least.
+;;
+(comment
+  
+  (main (str (System/getenv "HOME")
+          "/src/alc.index-defs"))
+
+  (main (str (System/getenv "HOME")
+          "/src/alc.index-defs")
+    {:overwrite true})
+
+  (main (str (System/getenv "HOME")
+          "/src/alc.index-defs")
+    {:verbose false})
+
+  (main (str (System/getenv "HOME")
+          "/src/antoine")
+    {:verbose true})
+
+  )
+
+;; the older manual way
 ;;
 ;; sample clj-kondo lint data can be produced like:
 ;;
@@ -297,11 +291,22 @@
 
   )
 
+(defn -main [& args]
+  (let [[proj-root & other] args
+        [opts & _] other
+        opts (when opts
+               (read-string opts))]
+    (main proj-root
+      (when (map? opts)
+        opts)))
+  (flush)
+  (System/exit 0))
+
 ;; a pseudo-record of gradually building up to creating the TAGS file
 (comment
   
   (def lint
-    (load-lint
+    (aia/load-lint
       (str (System/getenv "HOME")
         "/src/antoine/clj-kondo-analysis-full-paths-2.edn")))
 
