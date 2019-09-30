@@ -1,60 +1,34 @@
-(ns alc.index-defs.bin
-  (:import [java.nio ByteBuffer]))
+(ns alc.index-defs.bin)
 
-;; thanks clojure cookbook :)
 (defn make-section-header
-  [path]
-  (let [form-feed 12 ; 0x0c
-        new-line 10 ; 0x0a
-        buf-len (+ 1
-                  1
-                  (count path) 1
-                  1)
-        bb (ByteBuffer/allocate buf-len)
-        buf (byte-array buf-len)]
-    (doto bb
-      (.put (.byteValue form-feed))
-      (.put (.byteValue new-line))
-      (.put (.getBytes (str path ",")))
-      (.put (.byteValue new-line))
-      (.flip)
-      (.get buf))
-    buf))
+  [sb path]
+  (doto sb
+    (.append \u000c) ; form-feed
+    (.append \u000a) ; new-line
+    (.append path)
+    (.append \u002c) ; comma
+    (.append \u000a) ; new-line
+    ))
 
 (defn make-tag-line
-  [hint identifier line-no]
-  (let [id-str (str identifier)
-        line-no-str (str line-no)
-        new-line 10 ; 0x0a
-        del 127 ; 0x7f
-        soh 1 ; 0x01
-        buf-len (+ (count hint)
-                  1
-                  (count id-str)
-                  1
-                  (count line-no-str) 1
-                  1)
-        bb (ByteBuffer/allocate buf-len)
-        buf (byte-array buf-len)]
-    (doto bb
-      (.put (.getBytes hint))
-      (.put (.byteValue del))
-      (.put (.getBytes id-str))
-      (.put (.byteValue soh))
-      (.put (.getBytes (str line-no-str ",")))
-      (.put (.byteValue new-line))
-      (.flip)
-      (.get buf))
-    buf))
+  [sb hint identifier line-no]
+  (doto sb
+    (.append hint)
+    (.append \u007f) ; del
+    (.append (str identifier))
+    (.append \u0001) ; soh
+    (.append (str line-no ","))
+    (.append \u000a) ; new-line
+    ))
 
 (defn make-section
   [{:keys [:file-path :entries]}]
-  (let [header (make-section-header file-path)
-        tag-lines (map (fn [{:keys [:hint :identifier :line]}]
-                         (make-tag-line hint identifier line))
-                    entries)]
-    {:header header
-     :tag-lines tag-lines}))
+  (let [sb (StringBuilder.)]
+    ;; content of sb changes
+    (make-section-header sb file-path)
+    (doseq [{:keys [:hint :identifier :line]} entries]
+      (make-tag-line sb hint identifier line))
+    sb))
 
 ;; make-section takes as input something like:
 (comment

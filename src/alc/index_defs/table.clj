@@ -1,10 +1,7 @@
-(ns alc.index-defs.table
-  (:require
-   [clojure.java.io :as cji]))
+(ns alc.index-defs.table)
 
 (defn write-tags
-  [file-path {:keys [:header :tag-lines]}]
-  (with-open [out (cji/output-stream file-path :append true)]
-    (.write out header)
-    (doseq [tag-line tag-lines]
-      (.write out tag-line))))
+  [file-path section]
+  (spit file-path
+    (.toString section) :append true))
+
