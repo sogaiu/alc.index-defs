@@ -22,7 +22,25 @@
        (when verbose
          (println "* analyzing project source and deps w/ clj-kondo..."))
        (let [start-time (System/currentTimeMillis)
-             lint (cc/run! {:lint [out]
+             ;; out has a trailing newline because clj uses echo
+             paths (clojure.string/split (clojure.string/trim out)
+                     (re-pattern (System/getProperty "path.separator")))
+             ;; some paths are relative, that can be a problem because
+             ;; clj-kondo doesn't necessarily resolve them relative to
+             ;; an appropriate directory
+             full-paths
+             (map (fn [path]
+                    (let [f (java.io.File. path)]
+                      (if (not (.isAbsolute f))
+                        (let [pr-nio-path (java.nio.file.Paths/get proj-root
+                                            (into-array String ""))
+                              full-path (->> path
+                                          (.resolve pr-nio-path)
+                                          .toString)]
+                          full-path)
+                        path)))
+                      paths)
+             lint (cc/run! {:lint full-paths
                             :config {:output {:analysis true
                                               :format :edn
                                               :canonical-paths true}}})
