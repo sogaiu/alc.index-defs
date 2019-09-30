@@ -281,13 +281,22 @@
 
   (let [proj-root (str (System/getenv "HOME")
                     "/src/antoine")]
-    (main (str proj-root "/clj-kondo-analysis-full-paths-2.edn")
-      proj-root))
+    (main proj-root
+      {:lint-path
+       (str proj-root "/clj-kondo-analysis-full-paths-2.edn")}))
 
   (let [proj-root (str (System/getenv "HOME")
                     "/src/alc.index-defs")]
-    (main (str proj-root "/clj-kondo-analysis-full-paths.edn")
-      proj-root))
+    (main proj-root
+      {:lint-path
+       (str proj-root "/clj-kondo-analysis-full-paths.edn")}))
+
+  (let [proj-root (str (System/getenv "HOME")
+                    "/src/adorn")]
+    (main proj-root
+      {:lint-path
+       (str proj-root "/clj-kondo-analysis-full-paths.edn")
+       :overwrite true}))
 
   )
 
