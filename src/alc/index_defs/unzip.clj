@@ -22,14 +22,12 @@
             (when e-name ; only process files
               (when (and skip-class
                       (not (re-find #"^.*\.class$" e-path)))
-                (let [dest-dir-nio-path (java.nio.file.Paths/get unjar-dir-path
-                                          (into-array String
-                                            (-> e-dir
-                                              (clojure.string/split #"/"))))]
-                  (when (not (aif/ensure-dir (.toFile dest-dir-nio-path)))
+                (let [dest-dir-path (aif/path-join unjar-dir-path e-dir)]
+                  (when (not (aif/ensure-dir (cji/file dest-dir-path)))
                     (throw (Exception.
                              (str "failed to prepare dest dir for: " e-dir))))
-                  (let [dest-file (.toFile (.resolve dest-dir-nio-path e-name))]
+                  (let [dest-file (cji/file
+                                    (aif/path-join dest-dir-path e-name))]
                     (when (not dest-file)
                       (throw (Exception.
                                (str "java.io.File creation failed: " e-name))))
@@ -38,12 +36,8 @@
 (comment
   
   (unzip-jar
-    ;; steps toward os-independent path manipulation
-    (.toString
-      (java.nio.file.Paths/get (System/getenv "HOME")
-        (into-array String
-          (-> ".m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-            (clojure.string/split #"/"))))) ; XXX: use platform file path sep?
+    (aif/path-join (System/getenv "HOME")
+      ".m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar")
     "/tmp")
               
   )
