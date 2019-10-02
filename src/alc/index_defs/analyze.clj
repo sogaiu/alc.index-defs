@@ -1,78 +1,8 @@
 (ns alc.index-defs.analyze
   (:require
    [alc.index-defs.fs :as aif]
-   [clj-kondo.core :as cc]
-   [clojure.java.shell :as cjs]))
-
-(defmulti get-paths
-  (fn [method proj-root opts]
-    method))
-
-;; XXX: yarn over npx -- provide way to force one?
-(defmethod get-paths :shadow-cljs
-  [_ proj-root {:keys [:verbose]}]
-  (let [yarn-lock (java.io.File.
-                    (aif/path-join proj-root
-                      "yarn.lock"))
-        pkg-lock (java.io.File.
-                   (aif/path-join proj-root
-                     "package-lock.json"))
-        yarn? (.exists yarn-lock)
-        _ (when (and verbose yarn?)
-            (println (str "  found yarn.lock in: " proj-root)))
-        npx? (.exists pkg-lock)
-        _ (when (and verbose npx?)
-            (println (str "  found package-lock.json in: " proj-root)))
-        runner (cond
-                 (and yarn? npx?)
-                 (if (>= (.lastModified yarn-lock)
-                       (.lastModified pkg-lock))
-                   "yarn"
-                   "npx")
-                 ;;
-                 yarn? "yarn"
-                 ;;
-                 npx? "npx"
-                 ;;
-                 :else
-                 (assert false
-                   (str "No yarn.lock or package-lock.json in: " proj-root)))
-        _ (when verbose
-            (println (str "  chose " runner " to invoke shadow-cljs")))
-        {:keys [:err :exit :out]}
-        (cjs/with-sh-dir proj-root
-          (cjs/sh runner "shadow-cljs" "classpath"))]
-    (assert (= 0 exit)
-      (str "`" runner " shadow-cljs classpath` "
-        "failed to determine classpath\n"
-        "  exit\n" exit "\n"
-        "  out:\n" out "\n"
-        "  err:\n" err "\n"))
-    (clojure.string/trim out)))
-
-;; XXX: any benefit in using tools.deps directly?
-(defmethod get-paths :clj
-  [_ proj-root {:keys [:verbose]}]
-  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
-                                    (cjs/sh "clj" "-Spath"))]
-    (assert (= 0 exit)
-      (str "`clj -Spath` failed to determine classpath\n"
-        "  exit\n" exit "\n"
-        "  out:\n" out "\n"
-        "  err:\n" err "\n"))
-    ;; out has a trailing newline because clj uses echo
-    (clojure.string/trim out)))
-
-(defmethod get-paths :lein
-  [_ proj-root {:keys [:verbose]}]
-  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
-                                    (cjs/sh "lein" "classpath"))]
-    (assert (= 0 exit)
-      (str "`lein classpath` failed to determine classpath\n"
-        "  exit\n" exit "\n"
-        "  out:\n" out "\n"
-        "  err:\n" err "\n"))
-    (clojure.string/trim out)))
+   [alc.index-defs.paths :as aip]
+   [clj-kondo.core :as cc]))
 
 (defn analyze-paths
   ([proj-root path-desc]
@@ -106,21 +36,38 @@
   ([proj-root]
    (study-project-and-deps proj-root {:verbose false}))
   ([proj-root {:keys [verbose method] :as opts}]
-   (let [method (or method
+   (when verbose
+     (println "* determining paths to analyze"))
+   (let [shadow-file (java.io.File.
+                       (aif/path-join proj-root
+                         "shadow-cljs.edn"))
+         shadow-exists (.exists shadow-file)
+         _ (when (and verbose
+                   shadow-exists)
+             (println  "  found shadow-cljs.edn"))
+         deps-file (java.io.File.
+                     (aif/path-join proj-root
+                       "deps.edn"))
+         deps-exists (.exists deps-file)
+         _ (when (and verbose
+                   deps-exists)
+             (println  "  found deps.edn"))
+         project-clj-file (java.io.File.
+                            (aif/path-join proj-root
+                              "project.clj"))
+         project-clj-exists (.exists project-clj-file)
+         _ (when (and verbose
+                   project-clj-exists)
+             (println  "  found project.clj"))
+         method (or method
                   (cond
-                    (.exists (java.io.File.
-                               (aif/path-join proj-root
-                                 "shadow-cljs.edn")))
+                    shadow-exists
                     :shadow-cljs
                     ;;
-                    (.exists (java.io.File.
-                               (aif/path-join proj-root
-                                 "deps.edn")))
+                    deps-exists
                     :clj
                     ;;
-                    (.exists (java.io.File.
-                               (aif/path-join proj-root
-                                 "project.clj")))
+                    project-clj-exists
                     :lein
                     ;;
                     :else
@@ -128,8 +75,8 @@
      (assert method
        (str "No shadow-cljs.edn, deps.edn, or project.clj in: " proj-root))
      (when verbose
-       (println (str "* classpath determination type: " method)))
-     (when-let [path-desc (get-paths method
+       (println (str "  >> classpath computation by: " (name method) " <<")))
+     (when-let [path-desc (aip/get-paths method
                             proj-root {:verbose verbose})]
        (analyze-paths proj-root path-desc opts)))))
 
