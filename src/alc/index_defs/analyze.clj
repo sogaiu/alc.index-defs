@@ -1,53 +1,137 @@
 (ns alc.index-defs.analyze
   (:require
+   [alc.index-defs.fs :as aif]
    [clj-kondo.core :as cc]
    [clojure.java.shell :as cjs]))
 
-;; XXX: requires clj / clojure cli
+(defmulti get-paths
+  (fn [method proj-root opts]
+    method))
+
+;; XXX: yarn over npx -- provide way to force one?
+(defmethod get-paths :shadow-cljs
+  [_ proj-root {:keys [:verbose]}]
+  (let [yarn-lock (java.io.File.
+                    (aif/path-join proj-root
+                      "yarn.lock"))
+        pkg-lock (java.io.File.
+                   (aif/path-join proj-root
+                     "package-lock.json"))
+        yarn? (.exists yarn-lock)
+        _ (when (and verbose yarn?)
+            (println (str "  found yarn.lock in: " proj-root)))
+        npx? (.exists pkg-lock)
+        _ (when (and verbose npx?)
+            (println (str "  found package-lock.json in: " proj-root)))
+        runner (cond
+                 (and yarn? npx?)
+                 (if (>= (.lastModified yarn-lock)
+                       (.lastModified pkg-lock))
+                   "yarn"
+                   "npx")
+                 ;;
+                 yarn? "yarn"
+                 ;;
+                 npx? "npx"
+                 ;;
+                 :else
+                 (assert false
+                   (str "No yarn.lock or package-lock.json in: " proj-root)))
+        _ (when verbose
+            (println (str "  chose " runner " to invoke shadow-cljs")))
+        {:keys [:err :exit :out]}
+        (cjs/with-sh-dir proj-root
+          (cjs/sh runner "shadow-cljs" "classpath"))]
+    (assert (= 0 exit)
+      (str "`" runner " shadow-cljs classpath` "
+        "failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    (clojure.string/trim out)))
+
+;; XXX: any benefit in using tools.deps directly?
+(defmethod get-paths :clj
+  [_ proj-root {:keys [:verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (cjs/sh "clj" "-Spath"))]
+    (assert (= 0 exit)
+      (str "`clj -Spath` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    ;; out has a trailing newline because clj uses echo
+    (clojure.string/trim out)))
+
+(defmethod get-paths :lein
+  [_ proj-root {:keys [:verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (cjs/sh "lein" "classpath"))]
+    (assert (= 0 exit)
+      (str "`lein classpath` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    (clojure.string/trim out)))
+
+(defn analyze-paths
+  ([proj-root path-desc]
+   (analyze-paths proj-root path-desc {:verbose false}))
+  ([proj-root path-desc {:keys [verbose]}]
+   (when verbose
+     (println "* analyzing project source and deps w/ clj-kondo..."))
+   (let [start-time (System/currentTimeMillis)
+         paths (clojure.string/split path-desc
+                 (re-pattern (System/getProperty "path.separator")))
+         ;; some paths are relative, that can be a problem because
+         ;; clj-kondo doesn't necessarily resolve them relative to
+         ;; an appropriate directory
+         full-paths
+         (map (fn [path]
+                (let [f (java.io.File. path)]
+                  (if (not (.isAbsolute f))
+                    (aif/path-join proj-root path)
+                    path)))
+           paths)
+         lint (cc/run! {:lint full-paths
+                        :config {:output {:analysis true
+                                          :format :edn
+                                          :canonical-paths true}}})
+         duration (- (System/currentTimeMillis) start-time)]
+     (when verbose
+       (println (str "  duration: " duration " ms")))
+     lint)))
+
 (defn study-project-and-deps
   ([proj-root]
    (study-project-and-deps proj-root {:verbose false}))
-  ([proj-root {:keys [verbose]}]
-   (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
-                                     (cjs/sh "clj" "-Spath"))]
-     ;;(println (str "err: " err))
-     ;;(println (str "exit: " exit))
-     ;;(println (str "out: " out))
-     (assert (= 0 exit)
-       (str "`clj -Spath` failed to determine classpath\n"
-         "  exit\n" exit "\n"
-         "  out:\n" out "\n"
-         "  err:\n" err "\n"))
-     (when out
-       (when verbose
-         (println "* analyzing project source and deps w/ clj-kondo..."))
-       (let [start-time (System/currentTimeMillis)
-             ;; out has a trailing newline because clj uses echo
-             paths (clojure.string/split (clojure.string/trim out)
-                     (re-pattern (System/getProperty "path.separator")))
-             ;; some paths are relative, that can be a problem because
-             ;; clj-kondo doesn't necessarily resolve them relative to
-             ;; an appropriate directory
-             full-paths
-             (map (fn [path]
-                    (let [f (java.io.File. path)]
-                      (if (not (.isAbsolute f))
-                        (let [pr-nio-path (java.nio.file.Paths/get proj-root
-                                            (into-array String ""))
-                              full-path (->> path
-                                          (.resolve pr-nio-path)
-                                          .toString)]
-                          full-path)
-                        path)))
-                      paths)
-             lint (cc/run! {:lint full-paths
-                            :config {:output {:analysis true
-                                              :format :edn
-                                              :canonical-paths true}}})
-             duration (- (System/currentTimeMillis) start-time)]
-         (when verbose
-           (println (str "  duration: " duration " ms")))
-         lint)))))
+  ([proj-root {:keys [verbose method] :as opts}]
+   (let [method (or method
+                  (cond
+                    (.exists (java.io.File.
+                               (aif/path-join proj-root
+                                 "shadow-cljs.edn")))
+                    :shadow-cljs
+                    ;;
+                    (.exists (java.io.File.
+                               (aif/path-join proj-root
+                                 "deps.edn")))
+                    :clj
+                    ;;
+                    (.exists (java.io.File.
+                               (aif/path-join proj-root
+                                 "project.clj")))
+                    :lein
+                    ;;
+                    :else
+                    nil))]
+     (assert method
+       (str "No shadow-cljs.edn, deps.edn, or project.clj in: " proj-root))
+     (when verbose
+       (println (str "* classpath determination type: " method)))
+     (when-let [path-desc (get-paths method
+                            proj-root {:verbose verbose})]
+       (analyze-paths proj-root path-desc opts)))))
 
 (defn load-lint
   [path]

@@ -169,7 +169,7 @@
 (defn main
   ([proj-root]
    (main proj-root nil))
-  ([proj-root {:keys [:lint-path :overwrite :verbose]
+  ([proj-root {:keys [:lint-path :method :overwrite :verbose]
                :or {overwrite false
                     verbose true}}]
    (when verbose
@@ -187,7 +187,8 @@
            analysis (if lint-path
                       (:analysis (aia/load-lint lint-path))
                       (let [lint (aia/study-project-and-deps proj-root
-                                   {:verbose verbose})]
+                                   {:method method
+                                    :verbose verbose})]
                         (assert lint
                           (str "analysis failed"))
                         (:analysis lint)))
@@ -252,6 +253,34 @@
   
   (main (str (System/getenv "HOME")
           "/src/alc.index-defs"))
+
+  (main (str (System/getenv "HOME")
+          "/src/adorn")
+    {:overwrite true})
+
+  ;; XXX: should error
+  (main (str (System/getenv "HOME")
+          "/src/adorn")
+    {:overwrite true
+     :method :shadow-cljs})
+
+  (main (str (System/getenv "HOME")
+          "/src/antoine")
+    {:method :clj
+     :overwrite true})
+
+  (main (str (System/getenv "HOME")
+          "/src/antoine")
+    {:overwrite true})
+
+  (main (str (System/getenv "HOME")
+          "/src/clj-kondo")
+    {:overwrite true
+     :method :lein})
+
+  (main (str (System/getenv "HOME")
+          "/src/clj-kondo")
+    {:overwrite true})
 
   (main (str (System/getenv "HOME")
           "/src/alc.index-defs")
