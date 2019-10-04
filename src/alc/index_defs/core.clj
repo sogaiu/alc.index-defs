@@ -193,8 +193,9 @@
                           (str "analysis failed"))
                         (:analysis lint)))
            post-analysis-time (System/currentTimeMillis)
-           ;;
-           unzip-root (str proj-root "/.alc-id/unzip")
+           unzip-root (aif/path-join
+                        (aif/path-join proj-root ".alc-id")
+                        "unzip")
            ;; ensure unzip-root dir exists
            _ (assert (aif/ensure-dir (java.io.File. unzip-root))
                (str "failed to create unzip-root: " unzip-root))
