@@ -106,15 +106,10 @@
 
 (defn make-path-to-defs-table
   [defs]
-  (reduce (fn [acc {:keys [:visit-path] :as def-entry}]
-            (let [bucket (get acc visit-path)]
-              (assoc acc
-                visit-path (conj (if bucket
-                                   bucket
-                                   [])
-                             def-entry))))
-    {}
-    defs))
+  (apply merge-with
+    into
+    (for [{:keys [:visit-path] :as def-entry} defs]
+      {visit-path [def-entry]})))
 
 ;; make-path-to-defs-table should produce something like:
 (comment
