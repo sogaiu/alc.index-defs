@@ -174,7 +174,7 @@
                     verbose true}}]
    (when verbose
      (println "[alc.index-defs - index file creator]"))
-   (let [table-path (str proj-root "/TAGS")
+   (let [table-path (aif/path-join proj-root "TAGS")
          tags-file (java.io.File. table-path)]
      (if (not overwrite)
        (assert (not (.exists tags-file))
