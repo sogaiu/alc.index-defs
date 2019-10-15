@@ -2,7 +2,9 @@
   (:require
    [alc.index-defs.fs :as aif]
    [alc.index-defs.paths :as aip]
-   [clj-kondo.core :as cc]))
+   [clj-kondo.core :as cc]
+   ;; patching clj-kondo -- order important
+   [alc.index-defs.massage]))
 
 (defn analyze-paths
   ([proj-root path-desc]
@@ -16,77 +18,85 @@
          ;; some paths are relative, that can be a problem because
          ;; clj-kondo doesn't necessarily resolve them relative to
          ;; an appropriate directory
-         full-paths
+         lint-paths
          (map (fn [path]
                 (let [f (java.io.File. path)]
                   (if (not (.isAbsolute f))
                     (aif/path-join proj-root path)
                     path)))
            paths)
-         lint (cc/run! {:lint full-paths
-                        :config {:output {:analysis true
-                                          :format :edn
-                                          :canonical-paths true}}})
+         results (cc/run! {:lint lint-paths
+                           :config {:output {:analysis true
+                                             :canonical-paths true
+                                             :format :edn}}})
          duration (- (System/currentTimeMillis) start-time)]
      (when verbose
        (println (str "  duration: " duration " ms")))
-     lint)))
+     [results lint-paths])))
 
 (defn study-project-and-deps
   ([proj-root]
    (study-project-and-deps proj-root {:verbose false}))
-  ([proj-root {:keys [verbose method] :as opts}]
+  ([proj-root {:keys [:method :paths :verbose] :as opts}]
    (when verbose
      (println "* determining paths to analyze"))
-   (let [shadow-file (java.io.File.
+   (if paths
+     (do
+       (when verbose
+         (println "  >> using passed in paths <<"))
+       (analyze-paths proj-root paths opts))
+     (let [shadow-file (java.io.File.
+                         (aif/path-join proj-root
+                           "shadow-cljs.edn"))
+           shadow-exists (.exists shadow-file)
+           _ (when (and verbose
+                     shadow-exists)
+               (println  "  found shadow-cljs.edn"))
+           deps-file (java.io.File.
                        (aif/path-join proj-root
-                         "shadow-cljs.edn"))
-         shadow-exists (.exists shadow-file)
-         _ (when (and verbose
-                   shadow-exists)
-             (println  "  found shadow-cljs.edn"))
-         deps-file (java.io.File.
-                     (aif/path-join proj-root
-                       "deps.edn"))
-         deps-exists (.exists deps-file)
-         _ (when (and verbose
-                   deps-exists)
-             (println  "  found deps.edn"))
-         project-clj-file (java.io.File.
-                            (aif/path-join proj-root
-                              "project.clj"))
-         project-clj-exists (.exists project-clj-file)
-         _ (when (and verbose
-                   project-clj-exists)
-             (println  "  found project.clj"))
-         method (or method
-                  (cond
-                    shadow-exists
-                    :shadow-cljs
-                    ;;
-                    deps-exists
-                    :clj
-                    ;;
-                    project-clj-exists
-                    :lein
-                    ;;
-                    :else
-                    nil))]
-     (assert method
-       (str "No shadow-cljs.edn, deps.edn, or project.clj in: " proj-root))
-     (when verbose
-       (println (str "  >> classpath computation by: " (name method) " <<")))
-     (when-let [path-desc (aip/get-paths method
-                            proj-root {:verbose verbose})]
-       (analyze-paths proj-root path-desc opts)))))
+                         "deps.edn"))
+           deps-exists (.exists deps-file)
+           _ (when (and verbose
+                     deps-exists)
+               (println  "  found deps.edn"))
+           project-clj-file (java.io.File.
+                              (aif/path-join proj-root
+                                "project.clj"))
+           project-clj-exists (.exists project-clj-file)
+           _ (when (and verbose
+                     project-clj-exists)
+               (println  "  found project.clj"))
+           method (or method
+                    (cond
+                      shadow-exists
+                      :shadow-cljs
+                      ;;
+                      deps-exists
+                      :clj
+                      ;;
+                      project-clj-exists
+                      :lein
+                      ;;
+                      :else
+                      nil))]
+       (assert method
+         (str "No shadow-cljs.edn, deps.edn, or project.clj in: " proj-root))
+       (when verbose
+         (println (str "  >> classpath computation by: " (name method) " <<")))
+       (when-let [path-desc (aip/get-lint-paths method
+                              proj-root {:verbose verbose})]
+         (analyze-paths proj-root path-desc opts))))))
 
-(defn load-lint
-  [path]
+(defn load-analysis
+  [path {:keys [:verbose]}]
+  (when verbose
+    (println "* loading pre-existing analysis"))
   (-> path
     slurp
-    read-string))
+    read-string
+    :analysis))
 
-;; load-lint is supposed to read in something like the following
+;; load-analysis is supposed to read in something like the following
 (comment
   
   ;; structure of analysis data:
