@@ -12,17 +12,21 @@
   ([jar-path target-path {:keys [:skip-class]
                           :or {skip-class true}}]
    (let [jar-name (.getName (java.io.File. jar-path))
-        unjar-dir (java.io.File. target-path jar-name)
-        unjar-dir-path (.getAbsolutePath unjar-dir)]
+         unjar-dir (java.io.File. target-path jar-name)
+         unjar-dir-path (.getAbsolutePath unjar-dir)]
     (when (aif/ensure-dir unjar-dir)
       (with-open [z (ZipFile. jar-path)]
         (doseq [e (enumeration-seq (.entries z))]
-          (let [e-path (.getName e)
-                [_ e-dir e-name] (re-find #"^(.*)/([^/]+)$" e-path)]
-            (when e-name ; only process files
+          (when (not (.isDirectory e))
+            (let [e-path (.getName e)
+                  e-file (cji/file e-path)
+                  e-dir (.getParent e-file) ; can be nil
+                  e-name (.getName e-file)]
               (when (and skip-class
                       (not (re-find #"^.*\.class$" e-path)))
-                (let [dest-dir-path (aif/path-join unjar-dir-path e-dir)]
+                (let [dest-dir-path (if e-dir
+                                      (aif/path-join unjar-dir-path e-dir)
+                                      unjar-dir-path)]
                   (when (not (aif/ensure-dir (cji/file dest-dir-path)))
                     (throw (Exception.
                              (str "failed to prepare dest dir for: " e-dir))))
