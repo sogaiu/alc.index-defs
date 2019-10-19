@@ -354,6 +354,29 @@
           "src/antoine")
     {:overwrite true})
 
+  (let [m2-repos-path (aif/path-join (System/getenv "HOME")
+                        ".m2/repository")
+        ;; XXX: order tried first
+        ;; jar-paths ["com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
+        ;;            "thheller/shadow-client/1.3.2/shadow-client-1.3.2.jar"
+        ;;            "thheller/shadow-cljs/2.8.55/shadow-cljs-2.8.55.jar"
+        ;;            "org/clojure/core.async/0.4.500/core.async-0.4.500.jar"]
+        ;; XXX: order in TAGS differed, but file size the same
+        jar-paths ["com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
+                   "thheller/shadow-cljs/2.8.55/shadow-cljs-2.8.55.jar"
+                   "thheller/shadow-client/1.3.2/shadow-client-1.3.2.jar"
+                   "org/clojure/core.async/0.4.500/core.async-0.4.500.jar"]
+        lint-paths (clojure.string/join ":"
+                     (concat ["src"] (map (fn [jar-path]
+                                            (aif/path-join m2-repos-path
+                                              jar-path))
+                                       jar-paths)))]
+    (println "lint-paths:" lint-paths)
+    (main (aif/path-join (System/getenv "HOME")
+            "src/antoine")
+      {:overwrite true
+       :paths lint-paths}))
+
   (main (aif/path-join (System/getenv "HOME")
           "src/antoine")
     {:verbose true})
