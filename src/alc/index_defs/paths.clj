@@ -40,11 +40,21 @@
                  :else
                  (assert false
                    (str "No yarn.lock or package-lock.json in: " proj-root)))
+        silent-flag (cond
+                      (= runner "yarn")
+                      "--silent"
+                      ;;
+                      (= runner "npx")
+                      "--quiet"
+                      ;;
+                      :else
+                      (assert false
+                        (str "unexpected runner: " runner)))
         _ (when verbose
             (println (str "  chose " runner " to invoke shadow-cljs")))
         {:keys [:err :exit :out]}
         (cjs/with-sh-dir proj-root
-          (cjs/sh runner "shadow-cljs" "classpath"))]
+          (cjs/sh runner silent-flag "shadow-cljs" "classpath"))]
     (assert (= 0 exit)
       (str "`" runner " shadow-cljs classpath` "
         "failed to determine classpath\n"
