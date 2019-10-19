@@ -103,23 +103,27 @@
 (defn main
   ([proj-root]
    (main proj-root nil))
-  ([proj-root {:keys [:analysis-path :format :method
+  ([proj-root {:keys [:analysis-path :format :method :out-name
                       :overwrite :paths :verbose]
                :or {format :etags
                     overwrite false
                     verbose true}}]
    (when verbose
      (println "[alc.index-defs - index file creator]"))
-   (let [table-path (cond
-                      (= format :ctags)
-                      (aif/path-join proj-root "tags")
-                      ;;
-                      (= format :etags)
-                      (aif/path-join proj-root "TAGS")
-                      ;;
-                      :else
-                      (throw (Exception.
-                               (str "Unrecognized format: " format))))
+   (let [out-name (cond
+                   out-name
+                   out-name
+                   ;;
+                   (= format :ctags)
+                   "tags"
+                   ;;
+                   (= format :etags)
+                   "TAGS"
+                   ;;
+                   :else
+                   (throw (Exception.
+                            (str "Unrecognized format: " format))))
+         table-path (aif/path-join proj-root out-name)
          tags-file (java.io.File. table-path)]
      (if (not overwrite)
        (assert (not (.exists tags-file))
@@ -187,7 +191,8 @@
                  :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
        ;; for each file with def entries, prepare a section and write it out
        (when verbose
-         (println (str "* assembling and writing TAGS file...")))
+         (println (str "* assembling and writing " out-name
+                    " file...")))
        ;; using clj-kondo's order is close to classpath order --
        ;; seems to have a few benefits doing it this way
        (doseq [visit-path (distinct
@@ -262,6 +267,12 @@
   (main (aif/path-join (System/getenv "HOME")
           "src/alc.index-defs")
     {:format :ctags
+     :overwrite true})
+
+  (main (aif/path-join (System/getenv "HOME")
+          "src/alc.index-defs")
+    {:format :ctags
+     :out-name ".tags"
      :overwrite true})
 
   (main (aif/path-join (System/getenv "HOME")
