@@ -13,7 +13,7 @@
                :opts (assoc (if (map? front)
                               front
                               {})
-                       :format ctags))]
+                       :format :ctags))]
     (aic/main (:proj-root omap)
       (:opts omap)))
   (flush)

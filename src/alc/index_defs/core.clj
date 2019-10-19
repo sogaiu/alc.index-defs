@@ -261,6 +261,11 @@
 
   (main (aif/path-join (System/getenv "HOME")
           "src/alc.index-defs")
+    {:format :ctags
+     :overwrite true})
+
+  (main (aif/path-join (System/getenv "HOME")
+          "src/alc.index-defs")
     {:verbose false})
 
   (main (aif/path-join (System/getenv "HOME")
