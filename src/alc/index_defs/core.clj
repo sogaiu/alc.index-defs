@@ -103,12 +103,23 @@
 (defn main
   ([proj-root]
    (main proj-root nil))
-  ([proj-root {:keys [:analysis-path :method :overwrite :paths :verbose]
-               :or {overwrite false
+  ([proj-root {:keys [:analysis-path :format :method
+                      :overwrite :paths :verbose]
+               :or {format :etags
+                    overwrite false
                     verbose true}}]
    (when verbose
      (println "[alc.index-defs - index file creator]"))
-   (let [table-path (aif/path-join proj-root "TAGS")
+   (let [table-path (cond
+                      (= format :ctags)
+                      (aif/path-join proj-root "tags")
+                      ;;
+                      (= format :etags)
+                      (aif/path-join proj-root "TAGS")
+                      ;;
+                      :else
+                      (throw (Exception.
+                               (str "Unrecognized format: " format))))
          tags-file (java.io.File. table-path)]
      (if (not overwrite)
        (assert (not (.exists tags-file))
@@ -212,6 +223,7 @@
                              :else
                              visit-path))
                section (aib/make-section {:file-path file-path
+                                          :format format
                                           :entries tag-input-entries})
                _ (assert (not (nil? section))
                    (str "failed to prepare section for: " visit-path))]
@@ -274,6 +286,11 @@
   (main (aif/path-join (System/getenv "HOME")
           "src/antoine")
     {:method :clj
+     :overwrite true})
+
+  (main (aif/path-join (System/getenv "HOME")
+          "src/antoine")
+    {:format :ctags
      :overwrite true})
 
   (main (aif/path-join (System/getenv "HOME")

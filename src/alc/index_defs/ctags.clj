@@ -1,4 +1,4 @@
-(ns alc.index-defs.etags
+(ns alc.index-defs.ctags
   (:require
    [alc.index-defs.core :as aic]))
 
@@ -13,7 +13,7 @@
                :opts (assoc (if (map? front)
                               front
                               {})
-                       :format :etags))]
+                       :format ctags))]
     (aic/main (:proj-root omap)
       (:opts omap)))
   (flush)
