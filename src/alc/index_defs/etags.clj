@@ -3,18 +3,17 @@
    [alc.index-defs.core :as aic]))
 
 (defn -main [& args]
-  (let [[front-str & other] args
+  (let [[front-str & _] args
         front (when front-str
                 (read-string front-str))
-        omap {:proj-root (if (string? front)
-                           front
-                           (System/getProperty "user.dir"))}
-        omap (assoc omap
-               :opts (assoc (if (map? front)
-                              front
-                              {})
-                       :format :etags))]
-    (aic/main (:proj-root omap)
-      (:opts omap)))
+        opts {:proj-dir (if (string? front)
+                          front
+                          (System/getProperty "user.dir"))}
+        opts (assoc (merge opts
+                      (if (map? front)
+                        front
+                        {}))
+               :format :etags)]
+    (aic/main opts))
   (flush)
   (System/exit 0))

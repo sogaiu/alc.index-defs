@@ -101,15 +101,15 @@
 ;;
 ;; XXX: make main just take single argument - opts
 (defn main
-  ([proj-root]
-   (main proj-root nil))
-  ([proj-root {:keys [:analysis-path :format :method :out-name
-                      :overwrite :paths :verbose]
-               :or {format :etags
-                    overwrite false
-                    verbose true}}]
+  ([{:keys [:analysis-path :format :method :out-name
+            :overwrite :paths :proj-dir :verbose]
+     :or {format :etags
+          overwrite false
+          verbose true}}]
    (when verbose
      (println "[alc.index-defs - index file creator]"))
+   (assert proj-dir
+     ":proj-dir is required")
    (let [out-name (cond
                    out-name
                    out-name
@@ -123,16 +123,16 @@
                    :else
                    (throw (Exception.
                             (str "Unrecognized format: " format))))
-         table-path (aif/path-join proj-root out-name)
+         table-path (aif/path-join proj-dir out-name)
          tags-file (java.io.File. table-path)]
      (if (not overwrite)
        (assert (not (.exists tags-file))
-         (str "TAGS already exists for: " proj-root))
+         (str "TAGS already exists for: " proj-dir))
        (when (.exists tags-file)
          (let [result (.delete tags-file)]
            (assert result
-             (str "failed to remove TAGS file for: " proj-root)))))
-     (let [ctx {:proj-root proj-root
+             (str "failed to remove TAGS file for: " proj-dir)))))
+     (let [ctx {:proj-dir proj-dir
                 ;; XXX: store other things such as options too?
                 :times [[:start-time (System/currentTimeMillis)]]}
            ctx (if analysis-path
@@ -149,7 +149,7 @@
                                 method (dissoc :method))
                               opts)
                        [results lint-paths]
-                       (aia/study-project-and-deps proj-root opts)]
+                       (aia/study-project-and-deps proj-dir opts)]
                    (assert results
                      (str "analysis failed"))
                    (assoc ctx
@@ -157,7 +157,7 @@
                      :lint-paths lint-paths)))
            ctx (assoc ctx
                  :unzip-root (aif/path-join
-                               (aif/path-join proj-root ".alc-id")
+                               (aif/path-join proj-dir ".alc-id")
                                "unzip"))
            unzip-root (:unzip-root ctx)
            ;; ensure unzip-root dir exists
@@ -214,13 +214,13 @@
                    (str "failed to prepare tag input entries for: " visit-path))
                ;; try to use relative paths in TAGS files
                ;; XXX: consider symlinking (e.g. ~/.gitlibs/ things) to
-               ;;      make everything appear under proj-root?
+               ;;      make everything appear under proj-dir?
                file-path (let [cp (.getCanonicalPath
-                                    (java.io.File. proj-root))]
+                                    (java.io.File. proj-dir))]
                            (cond
                              (clojure.string/starts-with? visit-path
-                               proj-root)
-                             (aif/path-split visit-path proj-root)
+                               proj-dir)
+                             (aif/path-split visit-path proj-dir)
                              ;;
                              (clojure.string/starts-with? visit-path cp)
                              (aif/path-split visit-path cp)
@@ -245,73 +245,74 @@
 
 (comment
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/atom-chlorine")
-    {:overwrite true})
+  ;; XXX: shadow-cljs version must be >= 2.8.5x (not sure exactly)
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/atom-chlorine")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/clojure")
-    {:overwrite true
-     :paths "src/clj/clojure"})
+  (main {:overwrite true
+         :paths "src/clj/clojure"
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                      "src/clojure")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/debug-repl"))
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/debug-repl")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/alc.index-defs"))
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/alc.index-defs")
-    {:overwrite true})
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/alc.index-defs")
-    {:format :ctags
-     :overwrite true})
+  (main {:format :ctags
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/alc.index-defs")
-    {:format :ctags
-     :out-name ".tags"
-     :overwrite true})
+  (main {:format :ctags
+         :out-name ".tags"
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/alc.index-defs")
-    {:verbose false})
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")
+         :verbose false})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/augistints")
-    {:overwrite true})
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/augistints")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/adorn")
-    {:overwrite true})
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/adorn")})
 
   ;; just one file
-  (main (aif/path-join (System/getenv "HOME")
-          "src/adorn")
-    {:overwrite true
-     :paths "src/script.clj"})
+  (main {:overwrite true
+         :paths "src/script.clj"
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/adorn")})
 
   ;; XXX: should error
-  (main (aif/path-join (System/getenv "HOME")
-          "src/adorn")
-    {:overwrite true
-     :method :shadow-cljs})
+  (main {:overwrite true
+         :method :shadow-cljs
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/adorn")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/antoine")
-    {:method :clj
-     :overwrite true})
+  (main {:method :clj
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/antoine")
-    {:format :ctags
-     :overwrite true})
+  (main {:format :ctags
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/antoine")
-    {:overwrite true})
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")})
 
   (let [m2-repos-path (aif/path-join (System/getenv "HOME")
                         ".m2/repository")
@@ -331,23 +332,23 @@
                                               jar-path))
                                        jar-paths)))]
     (println "lint-paths:" lint-paths)
-    (main (aif/path-join (System/getenv "HOME")
-            "src/antoine")
-      {:overwrite true
-       :paths lint-paths}))
+    (main {:overwrite true
+           :paths lint-paths
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/antoine")}))
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/antoine")
-    {:verbose true})
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")
+         :verbose true})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/clj-kondo")
-    {:overwrite true
-     :method :lein})
+  (main {:method :lein
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/clj-kondo")})
 
-  (main (aif/path-join (System/getenv "HOME")
-          "src/clj-kondo")
-    {:overwrite true})
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/clj-kondo")})
 
   )
 
@@ -368,47 +369,43 @@
 ;;      be made more robust -- perhaps warnings should be emitted at least.
 (comment
 
-  (let [proj-root (aif/path-join (System/getenv "HOME")
+  (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/antoine")]
-    (main proj-root
-      {:analysis-path
-       (aif/path-join proj-root
-         "clj-kondo-analysis-full-paths-2.edn")}))
+    (main {:analysis-path
+           (aif/path-join proj-dir
+             "clj-kondo-analysis-full-paths-2.edn")
+           :proj-dir proj-dir}))
 
-  (let [proj-root (aif/path-join (System/getenv "HOME")
+  (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/alc.index-defs")]
-    (main proj-root
-      {:analysis-path
-       (aif/path-join proj-root
-         "clj-kondo-analysis-full-paths.edn")}))
+    (main {:analysis-path
+           (aif/path-join proj-dir
+             "clj-kondo-analysis-full-paths.edn")
+           :proj-dir proj-dir}))
 
-  (let [proj-root (aif/path-join (System/getenv "HOME")
+  (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/adorn")]
-    (main proj-root
-      {:analysis-path
-       (aif/path-join proj-root
-         "clj-kondo-analysis-full-paths.edn")
-       :overwrite true}))
-
-  (let [proj-root (aif/path-join (System/getenv "HOME")
-                    "src/adorn")]
-    (main proj-root
-      {:lang :clj
-       :analysis-path
-       (aif/path-join proj-root
-         "clj-kondo-analysis-full-paths.edn")
-       :overwrite true}))
+    (main {:analysis-path
+           (aif/path-join proj-dir
+             "clj-kondo-analysis-full-paths.edn")
+           :overwrite true
+           :proj-dir proj-dir}))
 
   )
 
-(defn -main [& args]
-  (let [[proj-root & other] args
-        [opts & _] other
-        opts (when opts
-               (read-string opts))]
-    (main proj-root
-      (when (map? opts)
-        opts)))
+(defn -main
+  [& args]
+  (let [[front-str & other] args
+        front (when front-str
+                (read-string front-str))
+        opts {:proj-dir (if (string? front)
+                          front
+                          (System/getProperty "user.dir"))}
+        opts (assoc (merge opts
+                      (if (map? front)
+                        front
+                        {})))]
+    (main opts))
   (flush)
   (System/exit 0))
 
