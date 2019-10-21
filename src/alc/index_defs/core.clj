@@ -98,8 +98,6 @@
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
 ;;      along with the "include" directive might be intereseting
-;;
-;; XXX: make main just take single argument - opts
 (defn main
   ([{:keys [:analysis-path :format :method :out-name
             :overwrite :paths :proj-dir :verbose]
