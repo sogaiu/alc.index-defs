@@ -52,6 +52,17 @@
                         (str "unexpected runner: " runner)))
         _ (when verbose
             (println (str "  chose " runner " to invoke shadow-cljs")))
+        ;; min version of shadow-cljs 2.8.53 for classpath ability
+        {:keys [:err :exit :out]}
+        (cjs/with-sh-dir proj-root
+          (cjs/sh runner silent-flag "shadow-cljs" "info"))
+        [_ major minor patch]
+        (re-find #"cli version: (\d+)\.(\d+)\.(\d+)" err)
+        _ (assert (and (>= (Integer/parseInt major) 2)
+                    (>= (Integer/parseInt minor) 8)
+                    (>= (Integer/parseInt patch) 53))
+                  (str "shadow-cljs version too low: "
+                       major "." minor "." patch))
         {:keys [:err :exit :out]}
         (cjs/with-sh-dir proj-root
           (cjs/sh runner silent-flag "shadow-cljs" "classpath"))]
