@@ -407,20 +407,3 @@
   (flush)
   (System/exit 0))
 
-;; how do var-defs and ns-defs differ in visit-path?
-(comment
-
-  (let [ns-defs-set (->> (:ns-defs ctx)
-                      (map :visit-path)
-                      set)]
-    (doseq [{:keys [:visit-path]} (:var-defs ctx)]
-      (when (not (contains? ns-defs-set
-                   visit-path))
-        (println visit-path))))
-
-  ;; conclusion:
-  ;;
-  ;;   var-defs can have more elements because some files don't
-  ;;   have ns forms (e.g. clojure/core_print.clj has in-ns at the top)
-
-  )
