@@ -231,6 +231,10 @@
                _ (assert (not (nil? section))
                    (str "failed to prepare section for: " visit-path))]
            (ait/write-tags table-path section)))
+       (when (= format :ctags) ; better to be sorted for ctags
+         (when verbose
+           (println "* sorting ctags format file..."))
+         (ait/sort-tags table-path))
        (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
                                                       (nth 0)
                                                       (nth 1)))]
@@ -348,7 +352,8 @@
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
-  (main {:overwrite true
+  (main {:format :ctags
+         :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/repl-tooling")})
 
