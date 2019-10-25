@@ -407,32 +407,6 @@
   (flush)
   (System/exit 0))
 
-;; debugging-related
-(comment
-
-  ;; XXX: all-defs needs to be appropriately defined first
-  (defn make-tag-input-entries-for-path
-    [f-path]
-    (make-tag-input-entries-from-src (slurp f-path)
-      (filter (fn [{:keys [:visit-path]}]
-                (= visit-path f-path))
-        all-defs)))
-
-  (count
-    (make-tag-input-entries-for-path
-      (aif/path-join (System/getenv "HOME")
-        "src/antoine/src/antoine/renderer.cljs")))
-
-  (count
-    (make-tag-input-entries-for-path      
-      "/tmp/alc.index-defs/clojurescript-1.10.520.jar/cljs/repl/graaljs.clj"))
-
-  (count
-    (make-tag-input-entries-for-path
-      "/tmp/alc.index-defs/clojurescript-1.10.520.jar/cljs/core.cljs"))
-
-  )
-
 ;; how do var-defs and ns-defs differ in visit-path?
 (comment
 
