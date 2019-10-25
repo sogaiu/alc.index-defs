@@ -348,6 +348,10 @@
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/repl-tooling")})
+
   )
 
 ;; the manual way
