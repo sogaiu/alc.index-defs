@@ -7,6 +7,41 @@
   (fn [method proj-root opts]
     method))
 
+(defmethod get-lint-paths :boot
+  [_ proj-root {:keys [:verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (cjs/sh "boot" "with-cp" "-w" "-f" "-"))]
+    (assert (= 0 exit)
+      (str "`boot with-cp -w -f` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    (clojure.string/trim out)))
+
+;; XXX: any benefit in using tools.deps directly?
+(defmethod get-lint-paths :clj
+  [_ proj-root {:keys [:verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (cjs/sh "clj" "-Spath"))]
+    (assert (= 0 exit)
+      (str "`clj -Spath` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    ;; out has a trailing newline because clj uses echo
+    (clojure.string/trim out)))
+
+(defmethod get-lint-paths :lein
+  [_ proj-root {:keys [:verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (cjs/sh "lein" "classpath"))]
+    (assert (= 0 exit)
+      (str "`lein classpath` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    (clojure.string/trim out)))
+
 ;; XXX: yarn over npx -- provide way to force one?
 (defmethod get-lint-paths :shadow-cljs
   [_ proj-root {:keys [:verbose]}]
@@ -69,30 +104,6 @@
     (assert (= 0 exit)
       (str "`" runner " shadow-cljs classpath` "
         "failed to determine classpath\n"
-        "  exit\n" exit "\n"
-        "  out:\n" out "\n"
-        "  err:\n" err "\n"))
-    (clojure.string/trim out)))
-
-;; XXX: any benefit in using tools.deps directly?
-(defmethod get-lint-paths :clj
-  [_ proj-root {:keys [:verbose]}]
-  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
-                                    (cjs/sh "clj" "-Spath"))]
-    (assert (= 0 exit)
-      (str "`clj -Spath` failed to determine classpath\n"
-        "  exit\n" exit "\n"
-        "  out:\n" out "\n"
-        "  err:\n" err "\n"))
-    ;; out has a trailing newline because clj uses echo
-    (clojure.string/trim out)))
-
-(defmethod get-lint-paths :lein
-  [_ proj-root {:keys [:verbose]}]
-  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
-                                    (cjs/sh "lein" "classpath"))]
-    (assert (= 0 exit)
-      (str "`lein classpath` failed to determine classpath\n"
         "  exit\n" exit "\n"
         "  out:\n" out "\n"
         "  err:\n" err "\n"))

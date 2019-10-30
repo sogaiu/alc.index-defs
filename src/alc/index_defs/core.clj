@@ -352,6 +352,16 @@
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
+  ;; do not want to use shadow-cljs for this one
+  (main {:method :clj
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/sci")})
+
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/lumo")})
+
   (main {:format :ctags
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
