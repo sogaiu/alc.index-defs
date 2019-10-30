@@ -5,95 +5,8 @@
    [alc.index-defs.fs :as aif]
    [alc.index-defs.lookup :as ail]
    [alc.index-defs.paths :as aip]
-   [alc.index-defs.seek :as ais]
    [alc.index-defs.table :as ait]
    [alc.index-defs.unzip :as aiu]))
-
-;; XXX: move into another file?
-;; XXX: defrecords can yield defs where the id doesn't appear in
-;;      the source at the point of definition
-;;
-;;      e.g. (defrecord GraalJSEnv ...) defines:
-;;
-;;        GraalJSEnv
-;;        ->GraalJSEnv
-;;        map->GraalJSEnv
-(defn make-tag-input-entry-from-src
-  [src-str {:keys [:name :row :visit-path] :as def-entry}]
-  ;; XXX
-  ;;(println (str "src: " (subs src-str 0 30)))
-  ;;(println (str "def-entry: " def-entry))
-  (let [start-of-hint (ais/seek-to-row src-str row)
-        ;; longer strings are more brittle(?)
-        ;; XXX: possibly look for second newline?
-        new-line-after-hint (clojure.string/index-of src-str
-                              "\n" start-of-hint)
-        start-of-id (clojure.string/index-of src-str
-                      (str name) start-of-hint)]
-    ;; XXX
-    ;; (println (str "start-of-id: " start-of-id))
-    (when (and start-of-id
-            new-line-after-hint)
-      {:hint (subs src-str
-               start-of-hint (if (< 80 (- start-of-id start-of-hint))
-                               new-line-after-hint
-                               (+ start-of-id (count (str name)))))
-       :identifier name
-       :line row})))
-
-;; XXX: move into another file?
-;; XXX: defrecords can yield defs where the id doesn't appear in
-;;      the source at the point of definition
-;;
-;;      e.g. (defrecord GraalJSEnv ...) defines:
-;;
-;;        GraalJSEnv
-;;        ->GraalJSEnv
-;;        map->GraalJSEnv
-(defn make-tag-input-entries-from-src
-  [src-str {:keys [:name :row :visit-path] :as def-entry} full-fn-names]
-  (let [start-of-hint (ais/seek-to-row src-str row)
-        ;; longer strings are more brittle(?)
-        ;; XXX: possibly look for second newline?
-        new-line-after-hint (clojure.string/index-of src-str
-                              "\n" start-of-hint)
-        ;; XXX: still not quite right
-        space-after-hint-start (clojure.string/index-of src-str
-                                 " " start-of-hint)
-        ;; XXX: not necessarily correct for some very short names (e.g. 'e')
-        start-of-id (clojure.string/index-of src-str
-                      (str name) space-after-hint-start)]
-    (when (and start-of-id
-            new-line-after-hint)
-      (let [hint (subs src-str
-                   start-of-hint (cond
-                                   (< 80 (- start-of-id start-of-hint))
-                                   new-line-after-hint
-                                   ;;
-                                   :else
-                                   (+ start-of-id (count (str name)))))]
-        (distinct
-          (conj
-            (map (fn [full-name]
-                   {:hint hint
-                    :identifier full-name
-                    :line row})
-              full-fn-names)
-            {:hint hint
-             :identifier name
-             :line row}))))))
-
-;; make-tag-input-entries-from-src should produce a sequence of maps like:
-(comment
-
-  [{:hint "(defn read-string" ; this bit is what requires some work
-    :identifier 'read-string
-    :line 973}
-   {:hint "(defmacro syntax-quote"
-    :identifier 'syntax-quote
-    :line 991}]
-  
-  )
 
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
@@ -204,7 +117,7 @@
                (doall
                  (->> def-entries
                    (mapcat
-                     #(make-tag-input-entries-from-src src-str
+                     #(ail/make-tag-input-entries-from-src src-str
                         % (get synonyms-table (:name %))))
                    ;;distinct
                    ))
