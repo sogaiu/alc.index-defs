@@ -1,4 +1,6 @@
- (ns alc.index-defs.lookup)
+(ns alc.index-defs.lookup
+  (:require
+   [alc.index-defs.seek :as ais]))
 
 (defn make-path-to-ns-name-table
   [{:keys [:ns-defs]}]
@@ -72,5 +74,59 @@
       ]
      ;; likley more key-value pairs follow
      })
+
+  )
+
+;; XXX: defrecords can yield defs where the id doesn't appear in
+;;      the source at the point of definition
+;;
+;;      e.g. (defrecord GraalJSEnv ...) defines:
+;;
+;;        GraalJSEnv
+;;        ->GraalJSEnv
+;;        map->GraalJSEnv
+(defn make-tag-input-entries-from-src
+  [src-str {:keys [:name :row]} full-fn-names]
+  (let [start-of-hint (ais/seek-to-row src-str row)
+        ;; longer strings are more brittle(?)
+        ;; XXX: possibly look for second newline?
+        new-line-after-hint (clojure.string/index-of src-str
+                              "\n" start-of-hint)
+        ;; XXX: still not quite right
+        space-after-hint-start (clojure.string/index-of src-str
+                                 " " start-of-hint)
+        ;; XXX: not necessarily correct for some very short names (e.g. 'e')
+        start-of-id (clojure.string/index-of src-str
+                      (str name) space-after-hint-start)]
+    (when (and start-of-id
+            new-line-after-hint)
+      (let [hint (subs src-str
+                   start-of-hint (cond
+                                   (< 80 (- start-of-id start-of-hint))
+                                   new-line-after-hint
+                                   ;;
+                                   :else
+                                   (+ start-of-id (count (str name)))))]
+        (distinct
+          (conj
+            (map (fn [full-name]
+                   {:hint hint
+                    :identifier full-name
+                    :line row})
+              full-fn-names)
+            {:hint hint
+             :identifier name
+             :line row}))))))
+
+
+;; make-tag-input-entries-from-src should produce a sequence of maps like:
+(comment
+
+  [{:hint "(defn read-string" ; this bit is what requires some work
+    :identifier 'read-string
+    :line 973}
+   {:hint "(defmacro syntax-quote"
+    :identifier 'syntax-quote
+    :line 991}]
 
   )
