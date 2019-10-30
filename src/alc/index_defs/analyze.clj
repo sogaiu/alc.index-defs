@@ -66,6 +66,13 @@
            _ (when (and verbose
                      project-clj-exists)
                (println  "  found project.clj"))
+           build-boot-file (java.io.File.
+                             (aif/path-join proj-root
+                               "build.boot"))
+           build-boot-exists (.exists build-boot-file)
+           _ (when (and verbose
+                     build-boot-exists)
+               (println  "  found build.boot"))
            method (or method
                     (cond
                       shadow-exists
@@ -77,10 +84,14 @@
                       project-clj-exists
                       :lein
                       ;;
+                      build-boot-exists
+                      :boot
+                      ;;
                       :else
                       nil))]
        (assert method
-         (str "No shadow-cljs.edn, deps.edn, or project.clj in: " proj-root))
+         (str "No shadow-cljs.edn, deps.edn, project.clj, or build.boot in: "
+           proj-root))
        (when verbose
          (println (str "  >> classpath computation by: " (name method) " <<")))
        (when-let [path-desc (aip/get-lint-paths method
