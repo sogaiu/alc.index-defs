@@ -30,7 +30,7 @@
                       (str "failed to seek to row, col in string: "
                         row-no col-no string))
                     (inc search-idx)))))]
-    (+ pos (dec col-no))))
+    (+ pos col-no)))
 
 (comment
   
