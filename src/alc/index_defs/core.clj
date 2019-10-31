@@ -162,6 +162,7 @@
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
+
   ;; XXX: should error
   (main {:overwrite true
          :method :shadow-cljs
@@ -177,6 +178,10 @@
   (main {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alc.index-defs")
+         :verbose false})
+
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
@@ -191,10 +196,6 @@
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
-
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")
-         :verbose false})
 
   (main {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")
@@ -237,7 +238,7 @@
            :proj-dir (aif/path-join (System/getenv "HOME")
                        "src/antoine")}))
 
-  ;; XXX: shadow-cljs version must be >= 2.8.5x (not sure exactly)
+  ;; XXX: shadow-cljs version must be >= 2.8.53
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/atom-chlorine")})
@@ -263,6 +264,7 @@
   (main {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/debug-repl")})
 
+  ;; uses boot
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/lumo")})
@@ -272,7 +274,7 @@
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/repl-tooling")})
 
-  ;; do not want to use shadow-cljs for this one
+  ;; has shadow-cljs, but should not use that for indexing
   (main {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
