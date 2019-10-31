@@ -160,18 +160,20 @@
 
 (comment
 
-  ;; XXX: shadow-cljs version must be >= 2.8.5x (not sure exactly)
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/atom-chlorine")})
-
+                     "src/adorn")})
+  ;; XXX: should error
   (main {:overwrite true
-         :paths "src/clj/clojure"
+         :method :shadow-cljs
          :proj-dir (aif/path-join (System/getenv "HOME")
-                      "src/clojure")})
+                     "src/adorn")})
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/debug-repl")})
+  ;; just one file
+  (main {:overwrite true
+         :paths "src/script.clj"
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/adorn")})
 
   (main {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
@@ -195,25 +197,9 @@
                      "src/alc.index-defs")
          :verbose false})
 
-  (main {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/augistints")})
-
-  (main {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
-
-  ;; just one file
-  (main {:overwrite true
-         :paths "src/script.clj"
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
-
-  ;; XXX: should error
-  (main {:overwrite true
-         :method :shadow-cljs
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")
+         :verbose true})
 
   (main {:method :clj
          :overwrite true
@@ -252,9 +238,18 @@
            :proj-dir (aif/path-join (System/getenv "HOME")
                        "src/antoine")}))
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")
-         :verbose true})
+  ;; XXX: shadow-cljs version must be >= 2.8.5x (not sure exactly)
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/atom-chlorine")})
+
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/augistints")})
+
+  (main {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/clj-kondo")})
 
   (main {:method :lein
          :overwrite true
@@ -262,14 +257,12 @@
                      "src/clj-kondo")})
 
   (main {:overwrite true
+         :paths "src/clj/clojure"
          :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/clj-kondo")})
+                      "src/clojure")})
 
-  ;; do not want to use shadow-cljs for this one
-  (main {:method :clj
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/sci")})
+  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/debug-repl")})
 
   (main {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
@@ -280,8 +273,16 @@
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/repl-tooling")})
 
+  ;; do not want to use shadow-cljs for this one
+  (main {:method :clj
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/sci")})
+
   )
 
+;; XXX: may no longer work because clj-kondo doesn't retain full-fn-name
+;;
 ;; the manual way
 ;;
 ;; sample clj-kondo lint data can be produced like:
@@ -300,10 +301,11 @@
 (comment
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
-                    "src/antoine")]
+                    "src/adorn")]
     (main {:analysis-path
            (aif/path-join proj-dir
-             "clj-kondo-analysis-full-paths-2.edn")
+             "clj-kondo-analysis-full-paths.edn")
+           :overwrite true
            :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
@@ -314,11 +316,10 @@
            :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
-                    "src/adorn")]
+                    "src/antoine")]
     (main {:analysis-path
            (aif/path-join proj-dir
-             "clj-kondo-analysis-full-paths.edn")
-           :overwrite true
+             "clj-kondo-analysis-full-paths-2.edn")
            :proj-dir proj-dir}))
 
   )
