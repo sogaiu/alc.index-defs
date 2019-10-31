@@ -119,8 +119,7 @@
                    (mapcat
                      #(ail/make-tag-input-entries-from-src src-str
                         % (get synonyms-table (:name %))))
-                   ;;distinct
-                   ))
+                   distinct))
                _ (assert (not (nil? tag-input-entries))
                    (str "failed to prepare tag input entries for: " visit-path))
                ;; try to use relative paths in TAGS files
