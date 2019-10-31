@@ -4,7 +4,7 @@
    [alc.index-defs.bin :as aib]
    [alc.index-defs.fs :as aif]
    [alc.index-defs.lookup :as ail]
-   [alc.index-defs.paths :as aip]
+   [alc.index-defs.seek :as ais]
    [alc.index-defs.table :as ait]
    [alc.index-defs.unzip :as aiu]))
 
@@ -76,9 +76,9 @@
                        (java.io.File. unzip-root))
                (str "failed to create unzip-root: " unzip-root))
            ctx (assoc ctx
-                 :ns-defs (aip/process-ns-defs ctx))
+                 :ns-defs (ail/process-ns-defs ctx))
            ctx (assoc ctx
-                 :var-defs (aip/process-var-defs ctx))
+                 :var-defs (ail/process-var-defs ctx))
            ;; unzip all jars
            _ (when verbose
                (println (str "* unzipping jars...")))
