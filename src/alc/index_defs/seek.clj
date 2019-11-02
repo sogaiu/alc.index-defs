@@ -1,5 +1,7 @@
 (ns alc.index-defs.seek)
 
+;; XXX: 1-based rows and cols? - clj-kondo is internally 1-based
+
 ;; XXX: improvement: detect line ending char(s) and use that to search
 ;;      robustness: use regex to search for \n, \r, \r\n
 (defn seek-to-row
@@ -30,7 +32,7 @@
                       (str "failed to seek to row, col in string: "
                         row-no col-no string))
                     (inc search-idx)))))]
-    (+ pos col-no)))
+    (+ pos (dec col-no))))
 
 (comment
   
