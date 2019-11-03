@@ -18,7 +18,8 @@
          verbose true}
     :as opts}]
   (when verbose
-    (println "* checking specified options"))
+    (println "* checking specified options")
+    (println "  input: " opts))
   (let [out-name (cond
                    out-name
                    out-name
@@ -39,8 +40,11 @@
   (when cp-command
     (assert (coll? cp-command)
       ":cp-command should be like [\"my-cp-cmd\" \"arg1\" \"arg2\" ...]"))
-  (assoc opts
-    :format format
-    :out-name out-name
-    :overwrite overwrite
-    :verbose verbose)))
+  (let [opts (assoc opts
+               :format format
+               :out-name out-name
+               :overwrite overwrite
+               :verbose verbose)]
+    (when verbose
+      (println "  output: " opts))
+    opts)))

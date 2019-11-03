@@ -4,18 +4,14 @@
    [alc.index-defs.opts :as aio]))
 
 (defn -main [& args]
-  (let [[front-str & other-strs] args
-        front (when front-str
-                (read-string front-str))
-        opts {:proj-dir (if (string? front)
-                          front
-                          (System/getProperty "user.dir"))}
+  (let [opts {:proj-dir
+              (if-let [first-str-opt (->> args
+                                       (keep #(string? (read-string %)))
+                                       first)]
+                first-str-opt
+                (System/getProperty "user.dir"))}
         opts (merge opts
-               (if (map? front)
-                 front
-                 {}))
-        opts (merge opts
-               (aio/merge-only-map-strs other-strs))
+               (aio/merge-only-map-strs args))
         opts (assoc opts
                :format :etags)]
     (aic/main opts))

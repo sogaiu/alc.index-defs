@@ -5,6 +5,7 @@
    [alc.index-defs.fs :as aif]
    [alc.index-defs.lookup :as ail]
    [alc.index-defs.seek :as ais]
+   [alc.index-defs.opts :as aio]
    [alc.index-defs.table :as ait]
    [alc.index-defs.unzip :as aiu]))
 
@@ -327,16 +328,14 @@
 
 (defn -main
   [& args]
-  (let [[front-str & _] args
-        front (when front-str
-                (read-string front-str))
-        opts {:proj-dir (if (string? front)
-                          front
-                          (System/getProperty "user.dir"))}
+  (let [opts {:proj-dir
+              (if-let [first-str-opt (->> args
+                                       (keep #(string? (read-string %)))
+                                       first)]
+                first-str-opt
+                (System/getProperty "user.dir"))}
         opts (merge opts
-               (if (map? front)
-                 front
-                 {}))]
+               (aio/merge-only-map-strs args))]
     (main opts))
   (flush)
   (System/exit 0))
