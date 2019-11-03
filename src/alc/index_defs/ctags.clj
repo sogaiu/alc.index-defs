@@ -15,6 +15,6 @@
         opts (assoc opts
 
                :format :ctags)]
-    (aic/main opts))
+    (aic/run! opts))
   (flush)
   (System/exit 0))

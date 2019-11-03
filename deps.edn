@@ -5,8 +5,14 @@
  {
    clj-kondo
    {
-    :git/url "https://github.com/borkdude/clj-kondo.git"
-    :sha "d0442595a606bc74b540e19d47c0d64ff02ceb32"
+    ;; XXX: if clj-kondo accepts PR #572 or similar, use upstream?
+    :git/url "https://github.com/sogaiu/clj-kondo.git"
+    :sha "7750e7aafb68ce40bd7161cf16706c366e668092"
+   }
+   edamame
+   {
+    :git/url "https://github.com/borkdude/edamame.git"
+    :sha "60cce2871cce9373f1391b8a2caa377a4a47dfc9"
    }
  }
 }

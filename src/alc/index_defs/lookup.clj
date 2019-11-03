@@ -1,59 +1,131 @@
 (ns alc.index-defs.lookup
   (:require
    [alc.index-defs.fs :as aif]
-   [alc.index-defs.seek :as ais]))
+   [alc.index-defs.seek :as ais]
+   [edamame.core :as ec]))
 
-(defn process-ns-defs
-  [{:keys [:analysis :unzip-root]}]
+(defn add-paths-to
+  [entries unzip-root]
   (let [split-path-re #"(?x)    # free-form
                         ^       # start with
                         ([^:]+) # a path to a file (.jar)
                         :       # separated by a colon
                         ([^:]+) # and then a path contained within
                         $       # and nothing else "]
-    (->> (:namespace-definitions analysis)
-      (map
-        (fn [{:keys [:filename :row] :as entry}]
-          (let [[_ jar-path sub-path]
-                (re-find split-path-re filename)]
-            (if jar-path
-              (let [jar-name (.getName (java.io.File. jar-path))]
-                (assert jar-name
-                  (str "failed to parse: " jar-path))
-                (let [visit-path (aif/path-join
-                                   (aif/path-join unzip-root jar-name)
-                                   sub-path)]
-                  (assoc entry
-                    :jar-path jar-path
-                    :visit-path visit-path)))
-              (assoc entry
-                :visit-path filename))))))))
+    (map
+      (fn [{:keys [:filename] :as entry}]
+        (let [[_ jar-path sub-path]
+              (re-find split-path-re filename)]
+          (if jar-path
+            (let [jar-name (.getName (java.io.File. jar-path))]
+              (assert jar-name
+                (str "failed to parse: " jar-path))
+              (let [visit-path (aif/path-join
+                                 (aif/path-join unzip-root jar-name)
+                                 sub-path)]
+                (assoc entry
+                  :jar-path jar-path
+                  :visit-path visit-path)))
+            (assoc entry
+              :visit-path filename))))
+      entries)))
 
-(defn process-var-defs
+;; XXX: possibly instead of doing this 3 times, may be a single table can
+;;      be made to be used to look things up for all three cases
+(defn add-paths-to-ns-defs
   [{:keys [:analysis :unzip-root]}]
-  (let [split-path-re #"(?x)    # free-form
-                        ^       # start with
-                        ([^:]+) # a path to a file (.jar)
-                        :       # separated by a colon
-                        ([^:]+) # and then a path contained within
-                        $       # and nothing else "]
-    (->> (:var-definitions analysis)
-      (map
-        (fn [{:keys [:filename :row] :as entry}]
-          (let [[_ jar-path sub-path]
-                (re-find split-path-re filename)]
-            (if jar-path
-              (let [jar-name (.getName (java.io.File. jar-path))]
-                (assert jar-name
-                  (str "failed to parse: " jar-path))
-                (let [visit-path (aif/path-join
-                                   (aif/path-join unzip-root jar-name)
-                                   sub-path)]
-                  (assoc entry
-                    :jar-path jar-path
-                    :visit-path visit-path)))
-              (assoc entry
-               :visit-path filename))))))))
+  (add-paths-to (:namespace-definitions analysis)
+    unzip-root))
+
+(defn add-paths-to-var-defs
+  [{:keys [:analysis :unzip-root]}]
+  (add-paths-to (:var-definitions analysis)
+    unzip-root))
+
+(defn add-paths-to-var-uses
+  [{:keys [:analysis :unzip-root]}]
+  (add-paths-to (:var-usages analysis)
+    unzip-root))
+
+(comment
+
+  ;; sci commit bfa2d67b21171d1be55e49ccb0c8e0b8031ab761
+  ;;
+  ;; from :analysis -> :var-usages:
+  ;;
+  ;; {:arity 2
+  ;;  :col 18
+  ;;  :filename (aif/path-join (System/getenv "HOME")
+  ;;              "src/sci/src/sci/impl/interpreter.cljc")
+  ;;  :fixed-arities #{2}
+  ;;  :from sci.impl.interpreter
+  ;;  :lang :clj
+  ;;  :name macroexpand
+  ;;  :row 61
+  ;;  :to sci.impl.macros}
+  (let [src-str (slurp (aif/path-join (System/getenv "HOME")
+                         "src/sci/src/sci/impl/interpreter.cljc"))
+        spot (subs src-str (ais/seek-to-row-col src-str 61 18))]
+    (println (subs spot 0 10))
+    (println (ec/parse-string spot)))
+
+  ;; {:arity 2
+  ;;  :col 15
+  ;;  :filename (aif/path-join (System/getenv "HOME")
+  ;;              "src/sci/src/sci/impl/interpreter.cljc"
+  ;;  :fixed-arities #{2}
+  ;;  :from sci.impl.interpreter
+  ;;  :lang :clj
+  ;;  :name interpret
+  ;;  :row 28
+  ;;  :to sci.impl.interpreter}
+  (let [src-str (slurp (aif/path-join (System/getenv "HOME")
+                         "src/sci/src/sci/impl/interpreter.cljc"))
+        spot (subs src-str (ais/seek-to-row-col src-str 28 15))]
+    (println (subs spot 0 10))
+    (println (ec/parse-string spot)))
+
+  ;; clojure commit 653b8465845a78ef7543e0a250078eea2d56b659
+  ;;
+  ;; {:arity 3
+  ;;  :col 7
+  ;;  :filename "src/clojure/src/clj/clojure/java/io.clj"
+  ;;  :fixed-arities #{3}
+  ;;  :from clojure.java.io
+  ;;  :name replace
+  ;;  :row 41
+  ;;  :to clojure.string}
+  (let [src-str (slurp (aif/path-join (System/getenv "HOME")
+                         "src/clojure/src/clj/clojure/java/io.clj"))
+        spot (subs src-str (ais/seek-to-row-col src-str 41 7))]
+    (println (subs spot 0 10))
+    (println (ec/parse-string spot)))
+
+  )
+
+(defn add-full-names-to-var-uses
+  [{:keys [:var-uses]}]
+  (map
+    (fn [{:keys [:col :name :row :visit-path] :as entry}]
+      (if (and col row visit-path)
+        (let [src-str (slurp visit-path)
+              spot (subs src-str (ais/seek-to-row-col src-str row col))
+              full-name (when (not= name 'fn*)
+                          (try
+                            ;; XXX: need to customize parsing?
+                            (ec/parse-string spot {:quote true})
+                            (catch Exception e
+                              ;;
+                              (println "exception:"
+                                (get-in (Throwable->map e) [:via 0 :message]))
+                              (println "entry:" entry))
+                            (finally :failed-to-parse)))]
+          (if full-name
+            (assoc entry
+              :full-name full-name)
+            entry))
+        entry))
+    var-uses))
 
 (defn make-path-to-ns-name-table
   [{:keys [:ns-defs]}]
@@ -62,17 +134,16 @@
       [visit-path name])))
 
 (defn make-ns-path-to-vars-table
-  [{:keys [:analysis :path-to-ns-table]}]
-  (let [usages (:var-usages analysis)]
-    (apply merge-with
-      (fn [m1 m2]
-        (merge-with into
-          m1 m2))
-      (for [[ns-path ns-name] path-to-ns-table
-            {:keys [:full-fn-name :name :to]} usages
-            :when (and full-fn-name
-                    (= ns-name to))]
-        {ns-path {name #{full-fn-name}}}))))
+  [{:keys [:path-to-ns-table :var-uses]}]
+  (apply merge-with
+    (fn [m1 m2]
+      (merge-with into
+        m1 m2))
+    (for [[ns-path ns-name] path-to-ns-table
+          {:keys [:full-name :name :to]} var-uses
+          :when (and full-name
+                  (= ns-name to))]
+      {ns-path {name #{full-name}}})))
 
 (defn make-path-to-defs-table
   [{:keys [:ns-defs :var-defs]}]
@@ -139,7 +210,7 @@
 ;;        ->GraalJSEnv
 ;;        map->GraalJSEnv
 (defn make-tag-input-entries-from-src
-  [src-str {:keys [:name :row]} full-fn-names]
+  [src-str {:keys [:name :row]} full-names]
   (let [start-of-hint (ais/seek-to-row src-str row)
         ;; longer strings are more brittle(?)
         ;; XXX: possibly look for second newline?
@@ -166,7 +237,7 @@
                    {:hint hint
                     :identifier full-name
                     :line row})
-              full-fn-names)
+              full-names)
             {:hint hint
              :identifier name
              :line row}))))))

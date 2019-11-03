@@ -2,9 +2,7 @@
   (:require
    [alc.index-defs.fs :as aif]
    [alc.index-defs.paths :as aip]
-   [clj-kondo.core :as cc]
-   ;; patching clj-kondo -- order important
-   [alc.index-defs.massage]))
+   [clj-kondo.core :as cc]))
 
 (defn analyze-paths
   ([proj-root path-desc]

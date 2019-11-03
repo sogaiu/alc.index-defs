@@ -1,10 +1,10 @@
- (ns alc.index-defs.core
+(ns alc.index-defs.core
+  (:refer-clojure :exclude [run!])
   (:require
    [alc.index-defs.analyze :as aia]
    [alc.index-defs.bin :as aib]
    [alc.index-defs.fs :as aif]
    [alc.index-defs.lookup :as ail]
-   [alc.index-defs.seek :as ais]
    [alc.index-defs.opts :as aio]
    [alc.index-defs.table :as ait]
    [alc.index-defs.unzip :as aiu]))
@@ -12,207 +12,210 @@
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
 ;;      along with the "include" directive might be intereseting
-(defn main
-  ([{:keys [:analysis-path :format :method :out-name
-            :overwrite :paths :proj-dir :verbose]
-     :or {format :etags
-          overwrite false
-          verbose true}}]
-   (when verbose
-     (println "[alc.index-defs - index file creator]"))
-   (assert proj-dir
-     ":proj-dir is required")
-   (let [out-name (cond
-                   out-name
-                   out-name
-                   ;;
-                   (= format :ctags)
-                   "tags"
-                   ;;
-                   (= format :etags)
-                   "TAGS"
-                   ;;
-                   :else
-                   (throw (Exception.
-                            (str "Unrecognized format: " format))))
-         table-path (aif/path-join proj-dir out-name)
-         tags-file (java.io.File. table-path)]
-     (if (not overwrite)
-       (assert (not (.exists tags-file))
-         (str "TAGS already exists for: " proj-dir))
-       (when (.exists tags-file)
-         (let [result (.delete tags-file)]
-           (assert result
-             (str "failed to remove TAGS file for: " proj-dir)))))
-     (let [ctx {:proj-dir proj-dir
-                ;; XXX: store other things such as options too?
-                :times [[:start-time (System/currentTimeMillis)]]}
-           ctx (if analysis-path
-                 (let [opts {:verbose verbose}
-                       analysis (aia/load-analysis analysis-path opts)]
-                   ;; XXX: lint-paths unavailable
-                   (assoc ctx
-                     :analysis analysis))
-                 (let [opts {:method method
-                             :verbose verbose}
-                       opts (if paths ; don't use any 'method'
-                              (cond-> (assoc opts
-                                        :paths paths)
-                                method (dissoc :method))
-                              opts)
-                       [results lint-paths]
-                       (aia/study-project-and-deps proj-dir opts)]
-                   (assert results
-                     (str "analysis failed"))
-                   (assoc ctx
-                     :analysis (:analysis results)
-                     :lint-paths lint-paths)))
-           ctx (assoc ctx
-                 :unzip-root (aif/path-join
-                               (aif/path-join proj-dir ".alc-id")
-                               "unzip"))
-           unzip-root (:unzip-root ctx)
-           ;; ensure unzip-root dir exists
-           _ (assert (aif/ensure-dir
-                       (java.io.File. unzip-root))
-               (str "failed to create unzip-root: " unzip-root))
-           ctx (assoc ctx
-                 :ns-defs (ail/process-ns-defs ctx))
-           ctx (assoc ctx
-                 :var-defs (ail/process-var-defs ctx))
-           ;; unzip all jars
-           _ (when verbose
-               (println (str "* unzipping jars...")))
-           ;; all distinct jar paths
-           ;; XXX: redundant to be looking at var-defs?
-           _ (doseq [jar-path (->> (concat (:ns-defs ctx) (:var-defs ctx))
-                                (keep (fn [{:keys [jar-path]}]
-                                        jar-path))
-                                distinct)]
-               (aiu/unzip-jar jar-path unzip-root))
-           _ (when verbose
-               (println (str "* massaging analysis data...")))
-           ;; visit-path to ns-name table
-           ctx (assoc ctx
-                 :path-to-ns-table (ail/make-path-to-ns-name-table ctx))
-           ;; ns file path to var to full-fn-name table -- takes a while
-           ctx (assoc ctx
-                 :aka-table (ail/make-ns-path-to-vars-table ctx))
-           ;; collect def entries by the file they live in
-           ctx (assoc ctx
-                 :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
-       ;; for each file with def entries, prepare a section and write it out
-       (when verbose
-         (println (str "* assembling and writing " out-name
-                    " file...")))
-       ;; using clj-kondo's order is close to classpath order --
-       ;; seems to have a few benefits doing it this way
-       (doseq [visit-path (distinct
-                            (map (fn [{:keys [:visit-path]}]
-                                   visit-path)
-                              (concat (:ns-defs ctx) (:var-defs ctx))))]
-         (let [def-entries (get (:visit-path-to-defs-table ctx) visit-path)
-               synonyms-table (get (:aka-table ctx) visit-path)
-               src-str (slurp visit-path)
-               tag-input-entries
-               (doall
-                 (->> def-entries
-                   (mapcat
-                     #(ail/make-tag-input-entries-from-src src-str
-                        % (get synonyms-table (:name %))))
-                   distinct))
-               _ (assert (not (nil? tag-input-entries))
-                   (str "failed to prepare tag input entries for: " visit-path))
-               ;; try to use relative paths in TAGS files
-               ;; XXX: consider symlinking (e.g. ~/.gitlibs/ things) to
-               ;;      make everything appear under proj-dir?
-               file-path (let [cp (.getCanonicalPath
-                                    (java.io.File. proj-dir))]
-                           (cond
-                             (clojure.string/starts-with? visit-path
-                               proj-dir)
-                             (aif/path-split visit-path proj-dir)
-                             ;;
-                             (clojure.string/starts-with? visit-path cp)
-                             (aif/path-split visit-path cp)
-                             ;;
-                             :else
-                             visit-path))
-               section (aib/make-section {:file-path file-path
-                                          :format format
-                                          :entries tag-input-entries})
-               _ (assert (not (nil? section))
-                   (str "failed to prepare section for: " visit-path))]
-           (ait/write-tags table-path section)))
-       (when (= format :ctags) ; better to be sorted for ctags
-         (when verbose
-           (println "* sorting ctags format file..."))
-         (ait/sort-tags table-path))
-       (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
-                                                      (nth 0)
-                                                      (nth 1)))]
-         (when verbose
-           ;; (println (str "  duration: "
-           ;;            (- (System/currentTimeMillis) post-massaging-time)
-           ;;            " ms"))
-           (println (str "-------------------------"))
-           (println (str "total duration: " duration " ms"))))))))
+(defn run!
+  [opts]
+  (let [{:keys [:analysis-path :cp-command :format :method :out-name
+                :overwrite :paths :proj-dir :verbose] :as checked-opts}
+        (aio/check opts)]
+    (let [table-path (aif/path-join proj-dir out-name)
+          tags-file (java.io.File. table-path)]
+      ;; XXX: delete later -- as late as possible?
+      (if (not overwrite)
+        (assert (not (.exists tags-file))
+          (str "TAGS already exists for: " proj-dir))
+        (when (.exists tags-file)
+          (let [result (.delete tags-file)]
+            (assert result
+              (str "failed to remove TAGS file for: " proj-dir)))))
+      (let [ctx {:proj-dir proj-dir
+                 :opts opts
+                 :checked-opts checked-opts
+                 :times [[:start-time (System/currentTimeMillis)]]}
+            ctx (if analysis-path
+                  (let [analysis (aia/load-analysis analysis-path checked-opts)]
+                    ;; XXX: lint-paths unavailable
+                    (assoc ctx
+                      :analysis analysis))
+                  ;; cp-command, method, paths, or none
+                  (let [[results lint-paths]
+                        (aia/study-project-and-deps proj-dir checked-opts)]
+                    (assert results
+                      (str "analysis failed"))
+                    (assoc ctx
+                      :analysis (:analysis results)
+                      :lint-paths lint-paths)))
+            ctx (assoc ctx
+                  :unzip-root (aif/path-join
+                                (aif/path-join proj-dir ".alc-id")
+                                "unzip"))
+            unzip-root (:unzip-root ctx)
+            ;; ensure unzip-root dir exists
+            _ (assert (aif/ensure-dir
+                        (java.io.File. unzip-root))
+                (str "failed to create unzip-root: " unzip-root))
+            ctx (assoc ctx
+                  :ns-defs (ail/add-paths-to-ns-defs ctx))
+            ctx (assoc ctx
+                  :var-defs (ail/add-paths-to-var-defs ctx))
+            ctx (assoc ctx
+                  :var-uses (ail/add-paths-to-var-uses ctx))
+            ;; unzip all jars
+            _ (when verbose
+                (println (str "* unzipping jars...")))
+            ;; all distinct jar paths
+            ;; XXX: redundant to be looking at var-defs?
+            _ (doseq [jar-path (->> (concat (:ns-defs ctx)
+                                      (:var-defs ctx)
+                                      (:var-uses ctx))
+                                 (keep (fn [{:keys [jar-path]}]
+                                         jar-path))
+                                 distinct)]
+                (aiu/unzip-jar jar-path unzip-root))
+            _ (when verbose
+                (println (str "* massaging analysis data...")))
+            ;; visit-path to ns-name table
+            _ (when verbose
+                (println (str "  making path to ns-name table")))
+            ctx (assoc ctx
+                  :path-to-ns-table (ail/make-path-to-ns-name-table ctx))
+            ;; enhance usages info by determining full identifier names
+            _ (when verbose
+                (println (str "  adding full names to var uses")))
+            ctx (assoc ctx
+                  :var-uses (ail/add-full-names-to-var-uses ctx))
+            ;; ns file path to var to full-name table -- takes a while
+            _ (when verbose
+                (println (str "  making ns-path to vars table..."
+                           "sorry, this is slow at the moment")))
+            ctx (assoc ctx
+                  :aka-table (ail/make-ns-path-to-vars-table ctx))
+            ;; collect def entries by the file they live in
+            _ (when verbose
+                (println (str "  making path to defs table")))
+            ctx (assoc ctx
+                  :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
+        ;; for each file with def entries, prepare a section and write it out
+        (when verbose
+          (println (str "* assembling and writing " out-name
+                     " file...")))
+        ;; using clj-kondo's order is close to classpath order --
+        ;; seems to have a few benefits doing it this way
+        (doseq [visit-path (distinct
+                             (map (fn [{:keys [:visit-path]}]
+                                    visit-path)
+                               (concat (:ns-defs ctx) (:var-defs ctx))))]
+          (let [def-entries (get (:visit-path-to-defs-table ctx) visit-path)
+                synonyms-table (get (:aka-table ctx) visit-path)
+                src-str (slurp visit-path)
+                tag-input-entries
+                (doall
+                  (->> def-entries
+                    (mapcat
+                      #(ail/make-tag-input-entries-from-src src-str
+                         % (get synonyms-table (:name %))))
+                    distinct))
+                _ (assert (not (nil? tag-input-entries))
+                    (str "failed to prepare tag input entries for: " visit-path))
+                ;; try to use relative paths in TAGS files
+                ;; XXX: consider symlinking (e.g. ~/.gitlibs/ things) to
+                ;;      make everything appear under proj-dir?
+                file-path (let [cp (.getCanonicalPath
+                                     (java.io.File. proj-dir))]
+                            (cond
+                              (clojure.string/starts-with? visit-path
+                                proj-dir)
+                              (aif/path-split visit-path proj-dir)
+                              ;;
+                              (clojure.string/starts-with? visit-path cp)
+                              (aif/path-split visit-path cp)
+                              ;;
+                              :else
+                              visit-path))
+                section (aib/make-section {:file-path file-path
+                                           :format format
+                                           :entries tag-input-entries})
+                _ (assert (not (nil? section))
+                    (str "failed to prepare section for: " visit-path))]
+            (ait/write-tags table-path section)))
+        (when (= format :ctags) ; better to be sorted for ctags
+          (when verbose
+            (println "* sorting ctags format file..."))
+          (ait/sort-tags table-path))
+        (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
+                                                       (nth 0)
+                                                       (nth 1)))]
+          (when verbose
+            ;; (println (str "  duration: "
+            ;;            (- (System/currentTimeMillis) post-massaging-time)
+            ;;            " ms"))
+            (println (str "-------------------------"))
+            (println (str "total duration: " duration " ms"))))))))
 
 (comment
 
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
   ;; XXX: should error
-  (main {:overwrite true
+  (run! {:overwrite true
          :method :shadow-cljs
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
   ;; just one file
-  (main {:overwrite true
+  (run! {:overwrite true
          :paths "src/script.clj"
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")
          :verbose false})
 
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (main {:format :ctags
+  (run! {:format :ctags
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (main {:format :ctags
+  (run! {:format :ctags
          :out-name ".tags"
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/alens")})
+
+  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")
          :verbose true})
 
-  (main {:method :clj
+  (run! {:cp-command ["yarn" "shadow-cljs" "classpath"]
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/antoine")
+         :verbose true})
+
+  (run! {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
-  (main {:format :ctags
+  (run! {:format :ctags
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
@@ -234,56 +237,159 @@
                                               jar-path))
                                        jar-paths)))]
     (println "lint-paths:" lint-paths)
-    (main {:overwrite true
+    (run! {:overwrite true
            :paths lint-paths
            :proj-dir (aif/path-join (System/getenv "HOME")
                        "src/antoine")}))
 
   ;; XXX: shadow-cljs version must be >= 2.8.53
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/atom-chlorine")})
 
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/augistints")})
 
-  (main {:overwrite true
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/babashka")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/badigeon")})
+
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
-  (main {:method :lein
+  (run! {:method :lein
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
-  (main {:overwrite true
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/cljfmt/cljfmt")})
+
+  (run! {:overwrite true
          :paths "src/clj/clojure"
          :proj-dir (aif/path-join (System/getenv "HOME")
                       "src/clojure")})
 
-  (main {:proj-dir (aif/path-join (System/getenv "HOME")
+  ;; XXX: cannot process clojure clr yet?
+  (run! {:overwrite true
+         :paths "Clojure/Clojure.Source/clojure"
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                      "src/clojure-clr")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                      "src/clojurescript")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/compliment")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/conch")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/conjure")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/core.async")})
+
+  ;; project.clj appears broken atm
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/core.logic")})
+
+  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/debug-repl")})
 
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/edamame")})
+
+  ;; XXX: SNAPSHOT dep in deps.edn causing problems
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/figwheel-main")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/fs")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/jet")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/liquid")})
+
   ;; uses boot
-  (main {:overwrite true
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/lumo")})
 
-  (main {:format :ctags
-         :overwrite true
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/punk")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/reagent")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/re-frame")})
+
+  (run! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/repl-tooling")})
 
+  ;; XXX: potemkin makes things hard?
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/rewrite-clj")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/replique")})
+
   ;; has shadow-cljs, but should not use that for indexing
-  (main {:method :clj
+  (run! {:method :clj
+         :overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/shadow-cljs")})
+
+  ;; has shadow-cljs, but should not use that for indexing
+  (run! {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/sci")})
 
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/specter")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/tools.deps.alpha")})
+
+  (run! {:overwrite true
+         :proj-dir (aif/path-join (System/getenv "HOME")
+                     "src/zprint")})
+
   )
 
 ;; XXX: may no longer work because clj-kondo doesn't retain full-fn-name
+;;      but may be revivable once full names are extracted from files
 ;;
 ;; the manual way
 ;;
@@ -296,7 +402,7 @@
 ;;
 ;; see script/make-analysis.sh
 ;;
-;; XXX: running main with an out-of-date lint data file may cause
+;; XXX: running run! with an out-of-date lint data file may cause
 ;;      problems.  e.g. the current code doesn't try to guard against if
 ;;      files are shorter or out-of-sync with the analysis.  this could
 ;;      be made more robust -- perhaps warnings should be emitted at least.
@@ -304,7 +410,7 @@
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/adorn")]
-    (main {:analysis-path
+    (run! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths.edn")
            :overwrite true
@@ -312,30 +418,17 @@
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/alc.index-defs")]
-    (main {:analysis-path
+    (run! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths.edn")
            :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/antoine")]
-    (main {:analysis-path
+    (run! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths-2.edn")
            :proj-dir proj-dir}))
 
   )
 
-(defn -main
-  [& args]
-  (let [opts {:proj-dir
-              (if-let [first-str-opt (->> args
-                                       (keep #(string? (read-string %)))
-                                       first)]
-                first-str-opt
-                (System/getProperty "user.dir"))}
-        opts (merge opts
-               (aio/merge-only-map-strs args))]
-    (main opts))
-  (flush)
-  (System/exit 0))
