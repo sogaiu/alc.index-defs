@@ -1,5 +1,15 @@
 (ns alc.index-defs.opts)
 
+(defn merge-only-map-strs
+  [map-strs]
+  (reduce (fn [acc map-str]
+            (let [read-obj (read-string map-str)]
+              (if (map? read-obj)
+                (merge acc read-obj)
+                acc)))
+    {}
+    map-strs))
+
 (defn check
   [{:keys [:analysis-path :cp-command :format :method :out-name
            :overwrite :paths :proj-dir :verbose]
