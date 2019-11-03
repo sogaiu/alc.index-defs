@@ -37,14 +37,30 @@
 (defn study-project-and-deps
   ([proj-root]
    (study-project-and-deps proj-root {:verbose false}))
-  ([proj-root {:keys [:method :paths :verbose] :as opts}]
+  ([proj-root {:keys [:cp-command :method :paths :verbose] :as opts}]
    (when verbose
      (println "* determining paths to analyze"))
-   (if paths
+   (cond
+     paths
      (do
        (when verbose
          (println "  >> using passed in paths <<"))
        (analyze-paths proj-root paths opts))
+     ;;
+     cp-command
+     (do
+       (when verbose
+         (println (str "  >> classpath computation by: "
+                    (clojure.string/join " " cp-command)
+                    " <<")))
+       (let [path-desc (aip/get-lint-paths :custom
+                         proj-root {:cp-command cp-command
+                                    :verbose verbose})]
+         (assert (not= path-desc "")
+           "No paths to analyze")
+         (analyze-paths proj-root path-desc opts)))
+     ;; possibly method is supplied
+     :else
      (let [shadow-file (java.io.File.
                          (aif/path-join proj-root
                            "shadow-cljs.edn"))
@@ -94,8 +110,10 @@
            proj-root))
        (when verbose
          (println (str "  >> classpath computation by: " (name method) " <<")))
-       (when-let [path-desc (aip/get-lint-paths method
-                              proj-root {:verbose verbose})]
+       (let [path-desc (aip/get-lint-paths method
+                         proj-root {:verbose verbose})]
+         (assert (not= path-desc "")
+           "No paths to analyze")
          (analyze-paths proj-root path-desc opts))))))
 
 (defn load-analysis
