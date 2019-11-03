@@ -31,6 +31,19 @@
     ;; out has a trailing newline because clj uses echo
     (clojure.string/trim out)))
 
+(defmethod get-lint-paths :custom
+  [_ proj-root {:keys [:cp-command :verbose]}]
+  (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
+                                    (apply cjs/sh cp-command))]
+    (assert (= 0 exit)
+      (str "`"
+        (clojure.string/join " " cp-command)
+        "` failed to determine classpath\n"
+        "  exit\n" exit "\n"
+        "  out:\n" out "\n"
+        "  err:\n" err "\n"))
+    (clojure.string/trim out)))
+
 (defmethod get-lint-paths :lein
   [_ proj-root {:keys [:verbose]}]
   (let [{:keys [:err :exit :out]} (cjs/with-sh-dir proj-root
