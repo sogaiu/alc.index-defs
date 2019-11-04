@@ -242,7 +242,6 @@
              :identifier name
              :line row}))))))
 
-
 ;; make-tag-input-entries-from-src should produce a sequence of maps like:
 (comment
 
