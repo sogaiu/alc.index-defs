@@ -98,8 +98,7 @@
                   :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
         ;; for each file with def entries, prepare a section and write it out
         (when verbose
-          (println (str "* assembling and writing " out-name
-                     " file...")))
+          (println (str "* assembling and writing " out-name " file...")))
         ;; using clj-kondo's order is close to classpath order --
         ;; seems to have a few benefits doing it this way
         (doseq [visit-path (distinct
@@ -117,7 +116,7 @@
                          % (get synonyms-table (:name %))))
                     distinct))
                 _ (assert (not (nil? tag-input-entries))
-                    (str "failed to prepare tag input entries for: " visit-path))
+                    (str "failed to make tag input entries for: " visit-path))
                 ;; try to use relative paths in TAGS files
                 ;; XXX: consider symlinking (e.g. ~/.gitlibs/ things) to
                 ;;      make everything appear under proj-dir?
