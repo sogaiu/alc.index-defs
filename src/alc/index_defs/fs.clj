@@ -53,3 +53,12 @@
   "src/adorn"
 
   )
+
+(defn try-relativize
+  [path leading-paths]
+  (loop [[a-path & the-rest] leading-paths]
+    (if (nil? a-path)
+      path
+      (if (clojure.string/starts-with? path a-path)
+        (path-split path a-path)
+        (recur the-rest)))))

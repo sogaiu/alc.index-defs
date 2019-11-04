@@ -2,11 +2,10 @@
   (:refer-clojure :exclude [run!])
   (:require
    [alc.index-defs.analyze :as aia]
-   [alc.index-defs.bin :as aib]
    [alc.index-defs.fs :as aif]
    [alc.index-defs.lookup :as ail]
    [alc.index-defs.opts :as aio]
-   [alc.index-defs.table :as ait]
+   [alc.index-defs.tags :as ait]
    [alc.index-defs.unzip :as aiu]))
 
 ;; XXX: creating one TAGS file for the project source and 
@@ -30,8 +29,10 @@
       (aif/reset-cache!)
       (let [ctx {:cache aif/cache
                  :checked-opts checked-opts
+                 :format format
                  :opts opts
                  :proj-dir proj-dir
+                 :table-path table-path
                  :times [[:start-time (System/currentTimeMillis)]]}
             ctx (if analysis-path
                   (let [analysis (aia/load-analysis analysis-path checked-opts)]
@@ -101,47 +102,16 @@
           (println (str "* assembling and writing " out-name " file...")))
         ;; using clj-kondo's order is close to classpath order --
         ;; seems to have a few benefits doing it this way
-        (doseq [visit-path (distinct
-                             (map (fn [{:keys [:visit-path]}]
-                                    visit-path)
-                               (concat (:ns-defs ctx) (:var-defs ctx))))]
-          (let [def-entries (get (:visit-path-to-defs-table ctx) visit-path)
-                synonyms-table (get (:aka-table ctx) visit-path)
-                src-str (aif/get-content visit-path)
-                tag-input-entries
-                (doall
-                  (->> def-entries
-                    (mapcat
-                      #(ail/make-tag-input-entries-from-src src-str
-                         % (get synonyms-table (:name %))))
-                    distinct))
-                _ (assert (not (nil? tag-input-entries))
-                    (str "failed to make tag input entries for: " visit-path))
-                ;; try to use relative paths in TAGS files
-                ;; XXX: consider symlinking (e.g. ~/.gitlibs/ things) to
-                ;;      make everything appear under proj-dir?
-                file-path (let [cp (.getCanonicalPath
-                                     (java.io.File. proj-dir))]
-                            (cond
-                              (clojure.string/starts-with? visit-path
-                                proj-dir)
-                              (aif/path-split visit-path proj-dir)
-                              ;;
-                              (clojure.string/starts-with? visit-path cp)
-                              (aif/path-split visit-path cp)
-                              ;;
-                              :else
-                              visit-path))
-                section (aib/make-section {:file-path file-path
-                                           :format format
-                                           :entries tag-input-entries})
-                _ (assert (not (nil? section))
-                    (str "failed to prepare section for: " visit-path))]
-            (ait/write-tags table-path section)))
-        (when (= format :ctags) ; better to be sorted for ctags
-          (when verbose
-            (println "* sorting ctags format file..."))
-          (ait/sort-tags table-path))
+        (cond
+          (= format :etags)
+          (ait/create-etags ctx)
+          ;;
+          (= format :ctags)
+          (ait/create-ctags ctx)
+          ;;
+          :else ; should not happen
+          (throw (Exception.
+                   (str "Unrecognized format: " format))))
         (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
                                                        (nth 0)
                                                        (nth 1)))]
