@@ -1,5 +1,21 @@
 (ns alc.index-defs.fs)
 
+(def cache
+  (atom {}))
+
+(defn reset-cache!
+  []
+  (reset! cache {}))
+
+(defn get-content
+  [path]
+  (if-let [cached-str (get @cache path)]
+    cached-str
+    (let [slurped (slurp path)]
+      (swap! cache assoc
+        path slurped)
+      slurped)))
+
 (defn ensure-dir
   [dir]
   (if (not (.exists dir))

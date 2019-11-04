@@ -108,7 +108,7 @@
   (map
     (fn [{:keys [:col :name :row :visit-path] :as entry}]
       (if (and col row visit-path)
-        (let [src-str (slurp visit-path)
+        (let [src-str (aif/get-content visit-path)
               spot (subs src-str (ais/seek-to-row-col src-str row col))
               full-name (when (not= name 'fn*)
                           (try

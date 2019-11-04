@@ -27,9 +27,11 @@
           (let [result (.delete tags-file)]
             (assert result
               (str "failed to remove TAGS file for: " proj-dir)))))
-      (let [ctx {:proj-dir proj-dir
-                 :opts opts
+      (aif/reset-cache!)
+      (let [ctx {:cache aif/cache
                  :checked-opts checked-opts
+                 :opts opts
+                 :proj-dir proj-dir
                  :times [[:start-time (System/currentTimeMillis)]]}
             ctx (if analysis-path
                   (let [analysis (aia/load-analysis analysis-path checked-opts)]
@@ -82,11 +84,11 @@
             _ (when verbose
                 (println (str "  adding full names to var uses")))
             ctx (assoc ctx
-                  :var-uses (ail/add-full-names-to-var-uses ctx))
+                  :var-uses (doall
+                              (ail/add-full-names-to-var-uses ctx)))
             ;; ns file path to var to full-name table -- takes a while
             _ (when verbose
-                (println (str "  making ns-path to vars table..."
-                           "sorry, this is slow at the moment")))
+                (println (str "  making ns-path to vars table")))
             ctx (assoc ctx
                   :aka-table (ail/make-ns-path-to-vars-table ctx))
             ;; collect def entries by the file they live in
@@ -106,7 +108,7 @@
                                (concat (:ns-defs ctx) (:var-defs ctx))))]
           (let [def-entries (get (:visit-path-to-defs-table ctx) visit-path)
                 synonyms-table (get (:aka-table ctx) visit-path)
-                src-str (slurp visit-path)
+                src-str (aif/get-content visit-path)
                 tag-input-entries
                 (doall
                   (->> def-entries
