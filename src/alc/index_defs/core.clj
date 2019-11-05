@@ -200,153 +200,153 @@
                                        jar-paths)))]
     (println "lint-paths:" lint-paths)
     (do-it! {:overwrite true
-           :paths lint-paths
-           :proj-dir (aif/path-join (System/getenv "HOME")
-                       "src/antoine")}))
+             :paths lint-paths
+             :proj-dir (aif/path-join (System/getenv "HOME")
+                         "src/antoine")}))
 
   ;; XXX: shadow-cljs version must be >= 2.8.53
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/atom-chlorine")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/atom-chlorine")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/augistints")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/augistints")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/babashka")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/babashka")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/badigeon")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/badigeon")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/clj-kondo")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/clj-kondo")})
 
   (do-it! {:method :lein
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/clj-kondo")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/clj-kondo")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/cljfmt/cljfmt")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/cljfmt/cljfmt")})
 
   (do-it! {:overwrite true
-         :paths "src/clj/clojure"
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                      "src/clojure")})
+           :paths "src/clj/clojure"
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/clojure")})
 
   ;; XXX: cannot process clojure clr yet?
   (do-it! {:overwrite true
-         :paths "Clojure/Clojure.Source/clojure"
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                      "src/clojure-clr")})
+           :paths "Clojure/Clojure.Source/clojure"
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/clojure-clr")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                      "src/clojurescript")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/clojurescript")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/compliment")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/compliment")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/conch")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/conch")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/conjure")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/conjure")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/core.async")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/core.async")})
 
   ;; project.clj appears broken atm
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/core.logic")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/core.logic")})
 
   (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/debug-repl")})
+                       "src/debug-repl")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/edamame")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/edamame")})
 
   ;; XXX: SNAPSHOT dep in deps.edn causing problems
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/figwheel-main")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/figwheel-main")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/fs")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/fs")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/jet")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/jet")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/liquid")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/liquid")})
 
   ;; uses boot
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/lumo")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/lumo")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/punk")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/punk")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/reagent")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/reagent")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/re-frame")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/re-frame")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/repl-tooling")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/repl-tooling")})
 
   ;; XXX: potemkin makes things hard?
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/rewrite-clj")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/rewrite-clj")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/replique")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/replique")})
 
   ;; has shadow-cljs, but should not use that for indexing
   (do-it! {:method :clj
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/shadow-cljs")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/shadow-cljs")})
 
   ;; has shadow-cljs, but should not use that for indexing
   (do-it! {:method :clj
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/sci")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/sci")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/specter")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/specter")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/tools.deps.alpha")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/tools.deps.alpha")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/zprint")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/zprint")})
 
   )
 
@@ -371,26 +371,26 @@
 (comment
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
-                    "src/adorn")]
+                   "src/adorn")]
     (do-it! {:analysis-path
-           (aif/path-join proj-dir
-             "clj-kondo-analysis-full-paths.edn")
-           :overwrite true
-           :proj-dir proj-dir}))
+             (aif/path-join proj-dir
+               "clj-kondo-analysis-full-paths.edn")
+             :overwrite true
+             :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
-                    "src/alc.index-defs")]
+                   "src/alc.index-defs")]
     (do-it! {:analysis-path
-           (aif/path-join proj-dir
-             "clj-kondo-analysis-full-paths.edn")
-           :proj-dir proj-dir}))
+             (aif/path-join proj-dir
+               "clj-kondo-analysis-full-paths.edn")
+             :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
-                    "src/antoine")]
+                   "src/antoine")]
     (do-it! {:analysis-path
-           (aif/path-join proj-dir
-             "clj-kondo-analysis-full-paths-2.edn")
-           :proj-dir proj-dir}))
+             (aif/path-join proj-dir
+               "clj-kondo-analysis-full-paths-2.edn")
+             :proj-dir proj-dir}))
 
   )
 
