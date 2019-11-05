@@ -45,3 +45,12 @@
     "/tmp")
               
   )
+
+(defn unzip-jars
+  [{:keys [:ns-defs :unzip-root :var-defs :var-uses]}]
+  ;; XXX: redundant to be looking at var-defs?
+  (doseq [jar-path (->> (concat ns-defs var-defs var-uses)
+                     (keep (fn [{:keys [jar-path]}]
+                             jar-path))
+                     distinct)]
+    (unzip-jar jar-path unzip-root)))

@@ -15,112 +15,104 @@
   [opts]
   (let [{:keys [:analysis-path :cp-command :format :method :out-name
                 :overwrite :paths :proj-dir :verbose] :as checked-opts}
-        (aio/check opts)]
-    (let [table-path (aif/path-join proj-dir out-name)
-          tags-file (java.io.File. table-path)]
-      ;; XXX: delete later -- as late as possible?
-      (if (not overwrite)
-        (assert (not (.exists tags-file))
-          (str "TAGS already exists for: " proj-dir))
-        (when (.exists tags-file)
-          (let [result (.delete tags-file)]
-            (assert result
-              (str "failed to remove TAGS file for: " proj-dir)))))
-      (aif/reset-cache!)
-      (let [ctx {:cache aif/cache
-                 :checked-opts checked-opts
-                 :format format
-                 :opts opts
-                 :proj-dir proj-dir
-                 :table-path table-path
-                 :times [[:start-time (System/currentTimeMillis)]]}
-            ctx (if analysis-path
-                  (let [analysis (aia/load-analysis analysis-path checked-opts)]
-                    ;; XXX: lint-paths unavailable
-                    (assoc ctx
-                      :analysis analysis))
-                  ;; cp-command, method, paths, or none
-                  (let [[results lint-paths]
-                        (aia/study-project-and-deps proj-dir checked-opts)]
-                    (assert results
-                      (str "analysis failed"))
-                    (assoc ctx
-                      :analysis (:analysis results)
-                      :lint-paths lint-paths)))
-            ctx (assoc ctx
-                  :unzip-root (aif/path-join
-                                (aif/path-join proj-dir ".alc-id")
-                                "unzip"))
-            unzip-root (:unzip-root ctx)
-            ;; ensure unzip-root dir exists
-            _ (assert (aif/ensure-dir
-                        (java.io.File. unzip-root))
-                (str "failed to create unzip-root: " unzip-root))
-            ctx (assoc ctx
-                  :ns-defs (ail/add-paths-to-ns-defs ctx))
-            ctx (assoc ctx
-                  :var-defs (ail/add-paths-to-var-defs ctx))
-            ctx (assoc ctx
-                  :var-uses (ail/add-paths-to-var-uses ctx))
-            ;; unzip all jars
-            _ (when verbose
-                (println (str "* unzipping jars...")))
-            ;; all distinct jar paths
-            ;; XXX: redundant to be looking at var-defs?
-            _ (doseq [jar-path (->> (concat (:ns-defs ctx)
-                                      (:var-defs ctx)
-                                      (:var-uses ctx))
-                                 (keep (fn [{:keys [jar-path]}]
-                                         jar-path))
-                                 distinct)]
-                (aiu/unzip-jar jar-path unzip-root))
-            _ (when verbose
-                (println (str "* massaging analysis data...")))
-            ;; visit-path to ns-name table
-            _ (when verbose
-                (println (str "  making path to ns-name table")))
-            ctx (assoc ctx
-                  :path-to-ns-table (ail/make-path-to-ns-name-table ctx))
-            ;; enhance usages info by determining full identifier names
-            _ (when verbose
-                (println (str "  adding full names to var uses")))
-            ctx (assoc ctx
-                  :var-uses (doall
-                              (ail/add-full-names-to-var-uses ctx)))
-            ;; ns file path to var to full-name table -- takes a while
-            _ (when verbose
-                (println (str "  making ns-path to vars table")))
-            ctx (assoc ctx
-                  :aka-table (ail/make-ns-path-to-vars-table ctx))
-            ;; collect def entries by the file they live in
-            _ (when verbose
-                (println (str "  making path to defs table")))
-            ctx (assoc ctx
-                  :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
-        ;; for each file with def entries, prepare a section and write it out
+        (aio/check opts)
+        table-path (aif/path-join proj-dir out-name)
+        tags-file (java.io.File. table-path)]
+    ;; XXX: delete later -- as late as possible?
+    (if (not overwrite)
+      (assert (not (.exists tags-file))
+        (str "TAGS already exists for: " proj-dir))
+      (when (.exists tags-file)
+        (let [result (.delete tags-file)]
+          (assert result
+            (str "failed to remove TAGS file for: " proj-dir)))))
+    (aif/reset-cache!)
+    (let [ctx {:cache aif/cache
+               :checked-opts checked-opts
+               :format format
+               :opts opts
+               :proj-dir proj-dir
+               :table-path table-path
+               :times [[:start-time (System/currentTimeMillis)]]}
+          ctx (if analysis-path
+                (let [analysis (aia/load-analysis analysis-path checked-opts)]
+                  ;; XXX: lint-paths unavailable
+                  (assoc ctx
+                    :analysis analysis))
+                ;; cp-command, method, paths, or none
+                (let [[results lint-paths]
+                      (aia/study-project-and-deps proj-dir checked-opts)]
+                  (assert results
+                    (str "analysis failed"))
+                  (assoc ctx
+                    :analysis (:analysis results)
+                    :lint-paths lint-paths)))
+          ctx (assoc ctx
+                :unzip-root (aif/path-join
+                              (aif/path-join proj-dir ".alc-id")
+                              "unzip"))
+          ;; ensure unzip-root dir exists
+          _ (assert (aif/ensure-dir
+                      (java.io.File. (:unzip-root ctx)))
+              (str "failed to create unzip-root: " (:unzip-root ctx)))
+          ctx (assoc ctx
+                :ns-defs (ail/add-paths-to-ns-defs ctx))
+          ctx (assoc ctx
+                :var-defs (ail/add-paths-to-var-defs ctx))
+          ctx (assoc ctx
+                :var-uses (ail/add-paths-to-var-uses ctx))
+          ;; unzip all jars
+          _ (when verbose
+              (println (str "* unzipping jars...")))
+          ;; all distinct jar paths
+          _ (aiu/unzip-jars ctx)
+          _ (when verbose
+              (println (str "* massaging analysis data...")))
+          ;; visit-path to ns-name table
+          _ (when verbose
+              (println (str "  making path to ns-name table")))
+          ctx (assoc ctx
+                :path-to-ns-table (ail/make-path-to-ns-name-table ctx))
+          ;; enhance usages info by determining full identifier names
+          _ (when verbose
+              (println (str "  adding full names to var uses")))
+          ctx (assoc ctx
+                :var-uses (doall
+                            (ail/add-full-names-to-var-uses ctx)))
+          ;; ns file path to var to full-name table -- takes a while
+          _ (when verbose
+              (println (str "  making ns-path to vars table")))
+          ctx (assoc ctx
+                :aka-table (ail/make-ns-path-to-vars-table ctx))
+          ;; collect def entries by the file they live in
+          _ (when verbose
+              (println (str "  making path to defs table")))
+          ctx (assoc ctx
+                :visit-path-to-defs-table (ail/make-path-to-defs-table ctx))]
+      ;; for each file with def entries, prepare a section and write it out
+      (when verbose
+        (println (str "* assembling and writing " out-name " file...")))
+      ;; using clj-kondo's order is close to classpath order --
+      ;; seems to have a few benefits doing it this way
+      (cond
+        (= format :etags)
+        (ait/create-etags ctx)
+        ;;
+        (= format :ctags)
+        (ait/create-ctags ctx)
+        ;;
+        :else ; should not happen
+        (throw (Exception.
+                 (str "Unrecognized format: " format))))
+      (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
+                                                     (nth 0)
+                                                     (nth 1)))]
         (when verbose
-          (println (str "* assembling and writing " out-name " file...")))
-        ;; using clj-kondo's order is close to classpath order --
-        ;; seems to have a few benefits doing it this way
-        (cond
-          (= format :etags)
-          (ait/create-etags ctx)
-          ;;
-          (= format :ctags)
-          (ait/create-ctags ctx)
-          ;;
-          :else ; should not happen
-          (throw (Exception.
-                   (str "Unrecognized format: " format))))
-        (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
-                                                       (nth 0)
-                                                       (nth 1)))]
-          (when verbose
-            ;; (println (str "  duration: "
-            ;;            (- (System/currentTimeMillis) post-massaging-time)
-            ;;            " ms"))
-            (println (str "-------------------------"))
-            (println (str "total duration: " duration " ms"))))))))
+          ;; (println (str "  duration: "
+          ;;            (- (System/currentTimeMillis) post-massaging-time)
+          ;;            " ms"))
+          (println (str "-------------------------"))
+          (println (str "total duration: " duration " ms")))))))
 
 (comment
 
