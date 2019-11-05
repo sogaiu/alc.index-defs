@@ -13,6 +13,6 @@
                 (System/getProperty "user.dir"))}
         opts (merge opts
                (aio/merge-only-map-strs args))]
-    (aic/run! opts))
+    (aic/do-it! opts))
   (flush)
   (System/exit 0))

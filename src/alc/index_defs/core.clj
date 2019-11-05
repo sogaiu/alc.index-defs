@@ -1,5 +1,4 @@
 (ns alc.index-defs.core
-  (:refer-clojure :exclude [run!])
   (:require
    [alc.index-defs.analyze :as aia]
    [alc.index-defs.fs :as aif]
@@ -11,7 +10,7 @@
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
 ;;      along with the "include" directive might be intereseting
-(defn run!
+(defn do-it!
   [opts]
   (let [{:keys [:analysis-path :cp-command :format :method :out-name
                 :overwrite :paths :proj-dir :verbose] :as checked-opts}
@@ -116,69 +115,69 @@
 
 (comment
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
   ;; XXX: should error
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :method :shadow-cljs
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
   ;; just one file
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :paths "src/script.clj"
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/adorn")})
 
-  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
+  (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
+  (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")
          :verbose false})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (run! {:format :ctags
+  (do-it! {:format :ctags
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (run! {:format :ctags
+  (do-it! {:format :ctags
          :out-name ".tags"
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alc.index-defs")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/alens")})
 
-  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
+  (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")
          :verbose true})
 
-  (run! {:cp-command ["yarn" "shadow-cljs" "classpath"]
+  (do-it! {:cp-command ["yarn" "shadow-cljs" "classpath"]
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")
          :verbose true})
 
-  (run! {:method :clj
+  (do-it! {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
-  (run! {:format :ctags
+  (do-it! {:format :ctags
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/antoine")})
 
@@ -200,152 +199,152 @@
                                               jar-path))
                                        jar-paths)))]
     (println "lint-paths:" lint-paths)
-    (run! {:overwrite true
+    (do-it! {:overwrite true
            :paths lint-paths
            :proj-dir (aif/path-join (System/getenv "HOME")
                        "src/antoine")}))
 
   ;; XXX: shadow-cljs version must be >= 2.8.53
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/atom-chlorine")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/augistints")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/babashka")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/badigeon")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
-  (run! {:method :lein
+  (do-it! {:method :lein
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/clj-kondo")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/cljfmt/cljfmt")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :paths "src/clj/clojure"
          :proj-dir (aif/path-join (System/getenv "HOME")
                       "src/clojure")})
 
   ;; XXX: cannot process clojure clr yet?
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :paths "Clojure/Clojure.Source/clojure"
          :proj-dir (aif/path-join (System/getenv "HOME")
                       "src/clojure-clr")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                       "src/clojurescript")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/compliment")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/conch")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/conjure")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/core.async")})
 
   ;; project.clj appears broken atm
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/core.logic")})
 
-  (run! {:proj-dir (aif/path-join (System/getenv "HOME")
+  (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
                      "src/debug-repl")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/edamame")})
 
   ;; XXX: SNAPSHOT dep in deps.edn causing problems
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/figwheel-main")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/fs")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/jet")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/liquid")})
 
   ;; uses boot
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/lumo")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/punk")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/reagent")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/re-frame")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/repl-tooling")})
 
   ;; XXX: potemkin makes things hard?
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/rewrite-clj")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/replique")})
 
   ;; has shadow-cljs, but should not use that for indexing
-  (run! {:method :clj
+  (do-it! {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/shadow-cljs")})
 
   ;; has shadow-cljs, but should not use that for indexing
-  (run! {:method :clj
+  (do-it! {:method :clj
          :overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/sci")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/specter")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/tools.deps.alpha")})
 
-  (run! {:overwrite true
+  (do-it! {:overwrite true
          :proj-dir (aif/path-join (System/getenv "HOME")
                      "src/zprint")})
 
@@ -365,7 +364,7 @@
 ;;
 ;; see script/make-analysis.sh
 ;;
-;; XXX: running run! with an out-of-date lint data file may cause
+;; XXX: running do-it! with an out-of-date lint data file may cause
 ;;      problems.  e.g. the current code doesn't try to guard against if
 ;;      files are shorter or out-of-sync with the analysis.  this could
 ;;      be made more robust -- perhaps warnings should be emitted at least.
@@ -373,7 +372,7 @@
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/adorn")]
-    (run! {:analysis-path
+    (do-it! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths.edn")
            :overwrite true
@@ -381,14 +380,14 @@
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/alc.index-defs")]
-    (run! {:analysis-path
+    (do-it! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths.edn")
            :proj-dir proj-dir}))
 
   (let [proj-dir (aif/path-join (System/getenv "HOME")
                     "src/antoine")]
-    (run! {:analysis-path
+    (do-it! {:analysis-path
            (aif/path-join proj-dir
              "clj-kondo-analysis-full-paths-2.edn")
            :proj-dir proj-dir}))

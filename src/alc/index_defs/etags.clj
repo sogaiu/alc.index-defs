@@ -14,6 +14,6 @@
                (aio/merge-only-map-strs args))
         opts (assoc opts
                :format :etags)]
-    (aic/run! opts))
+    (aic/do-it! opts))
   (flush)
   (System/exit 0))
