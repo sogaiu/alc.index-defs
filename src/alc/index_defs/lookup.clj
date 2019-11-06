@@ -236,20 +236,20 @@
             (map (fn [full-name]
                    {:hint hint
                     :identifier full-name
-                    :line row})
+                    :row row})
               full-names)
             {:hint hint
              :identifier name
-             :line row}))))))
+             :row row}))))))
 
 ;; make-tag-input-entries-from-src should produce a sequence of maps like:
 (comment
 
   [{:hint "(defn read-string" ; this bit is what requires some work
     :identifier 'read-string
-    :line 973}
+    :row 973}
    {:hint "(defmacro syntax-quote"
     :identifier 'syntax-quote
-    :line 991}]
+    :row 991}]
 
   )

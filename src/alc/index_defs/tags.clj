@@ -23,7 +23,7 @@
     (.toString section) :append true))
 
 (defn create-etags
-  [{:keys [:aka-table :format :ns-defs :proj-dir :table-path :var-defs
+  [{:keys [:aka-table :ns-defs :proj-dir :table-path :var-defs
            :visit-path-to-defs-table]}]
   (doseq [visit-path (distinct
                        (map (fn [{:keys [:visit-path]}]
@@ -47,8 +47,7 @@
           file-path (aif/try-relativize visit-path
                       [proj-dir
                        (.getCanonicalPath (java.io.File. proj-dir))])
-          section (aib/make-section {:file-path file-path
-                                     :format format
+          section (aib/make-etags-section {:file-path file-path
                                      :entries tag-input-entries})
           _ (assert (not (nil? section))
               (str "failed to prepare section for: " visit-path))]
