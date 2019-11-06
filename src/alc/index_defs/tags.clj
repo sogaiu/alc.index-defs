@@ -55,7 +55,7 @@
       (write-tags table-path section))))
 
 (defn create-ctags
-  [{:keys [:aka-table :format :ns-defs :proj-dir :table-path :var-defs
+  [{:keys [:aka-table :ns-defs :proj-dir :table-path :var-defs
            :verbose :visit-path-to-defs-table]}]
   (doseq [visit-path (distinct
                        (map (fn [{:keys [:visit-path]}]
@@ -69,7 +69,7 @@
               (mapcat (fn [{:keys [:name :row]}]
                         (map (fn [synonym]
                                {:identifier synonym
-                                :line row})
+                                :row row})
                           (get synonyms-table name))))
               distinct))
           _ (assert (not (nil? tag-input-entries))
@@ -80,13 +80,15 @@
           file-path (aif/try-relativize visit-path
                       [proj-dir
                        (.getCanonicalPath (java.io.File. proj-dir))])
-          ;; XXX: ctags files don't really have sections
-          section (aib/make-section {:file-path file-path
-                                     :format format
-                                     :entries tag-input-entries})
-          _ (assert (not (nil? section))
-              (str "failed to prepare section for: " visit-path))]
-      (write-tags table-path section)))
+          ctags-rows (StringBuilder.)
+          _ (doseq [{:keys [:identifier :row]} tag-input-entries]
+              (aib/append-ctags-row ctags-rows
+                {:file-path file-path
+                 :identifier identifier
+                 :row row}))
+          _ (assert (not (nil? ctags-rows))
+              (str "failed to prepare ctags-rows for: " visit-path))]
+      (write-tags table-path ctags-rows)))
   (when verbose
     (println "* sorting ctags format file..."))
   (sort-tags table-path))

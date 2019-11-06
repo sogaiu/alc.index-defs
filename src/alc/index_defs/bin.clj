@@ -59,6 +59,17 @@
         format))
     sb))
 
+(defn append-ctags-row
+  [sb {:keys [:file-path :identifier :row]}]
+  (doto sb
+      (.append (str identifier))
+      (.append \u0009) ; tab
+      (.append file-path)
+      (.append \u0009) ; tab
+      (.append (str row))
+      (.append \u000a) ; new-line
+      ))
+
 ;; make-section takes as input something like:
 (comment
 
