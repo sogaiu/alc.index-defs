@@ -116,70 +116,70 @@
 (comment
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/adorn")})
 
   ;; XXX: should error
   (do-it! {:overwrite true
-         :method :shadow-cljs
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
+           :method :shadow-cljs
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/adorn")})
 
   ;; just one file
   (do-it! {:overwrite true
-         :paths "src/script.clj"
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/adorn")})
+           :paths "src/script.clj"
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/adorn")})
 
   (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")})
+                       "src/alc.index-defs")})
 
   (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")
-         :verbose false})
+                       "src/alc.index-defs")
+           :verbose false})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/alc.index-defs")})
 
   (do-it! {:format :ctags
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/alc.index-defs")})
 
   (do-it! {:format :ctags
-         :out-name ".tags"
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alc.index-defs")})
+           :out-name ".tags"
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/alc.index-defs")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/alens")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/alens")})
 
   (do-it! {:proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")
-         :verbose true})
+                       "src/antoine")
+           :verbose true})
 
   (do-it! {:cp-command ["yarn" "shadow-cljs" "classpath"]
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")
-         :verbose true})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/antoine")
+           :verbose true})
 
   (do-it! {:method :clj
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/antoine")})
 
   (do-it! {:format :ctags
-         :overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")})
+           :overwrite true
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/antoine")})
 
   (do-it! {:overwrite true
-         :proj-dir (aif/path-join (System/getenv "HOME")
-                     "src/antoine")})
+           :proj-dir (aif/path-join (System/getenv "HOME")
+                       "src/antoine")})
 
   (let [m2-repos-path (aif/path-join (System/getenv "HOME")
                         ".m2/repository")
@@ -393,4 +393,3 @@
              :proj-dir proj-dir}))
 
   )
-
