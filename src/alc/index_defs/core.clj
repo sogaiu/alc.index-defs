@@ -111,7 +111,9 @@
           ;;            (- (System/currentTimeMillis) post-massaging-time)
           ;;            " ms"))
           (println (str "-------------------------"))
-          (println (str "total duration: " duration " ms")))))))
+          (println (str "total duration: " duration " ms"))))
+      ;; send this somewhere for examination if desired
+      ctx)))
 
 (comment
 
