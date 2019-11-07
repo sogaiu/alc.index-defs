@@ -350,9 +350,6 @@
 
   )
 
-;; XXX: may no longer work because clj-kondo doesn't retain full-fn-name
-;;      but may be revivable once full names are extracted from files
-;;
 ;; the manual way
 ;;
 ;; sample clj-kondo lint data can be produced like:
@@ -370,26 +367,32 @@
 ;;      be made more robust -- perhaps warnings should be emitted at least.
 (comment
 
+  ;; XXXL lots of exceptions
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/adorn")]
-    (do-it! {:analysis-path
-             (aiif/path-join proj-dir
-               "clj-kondo-analysis-full-paths.edn")
-             :overwrite true
-             :proj-dir proj-dir}))
+                   "src/adorn")
+        ctx (do-it! {:analysis-path
+                     (aiif/path-join proj-dir
+                       "clj-kondo-analysis-full-paths.edn")
+                     :overwrite true
+                     :proj-dir proj-dir})]
+    nil)
 
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/alc.index-defs")]
-    (do-it! {:analysis-path
-             (aiif/path-join proj-dir
-               "clj-kondo-analysis-full-paths.edn")
-             :proj-dir proj-dir}))
+                   "src/alc.index-defs")
+        ctx (do-it! {:analysis-path
+                     (aiif/path-join proj-dir
+                       "clj-kondo-analysis-full-paths.edn")
+                     :format :ctags
+                     :overwrite true
+                     :proj-dir proj-dir})]
+    nil)
 
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/antoine")]
-    (do-it! {:analysis-path
-             (aiif/path-join proj-dir
-               "clj-kondo-analysis-full-paths-2.edn")
-             :proj-dir proj-dir}))
+                   "src/antoine")
+        ctx (do-it! {:analysis-path
+                     (aiif/path-join proj-dir
+                       "clj-kondo-analysis-full-paths-2.edn")
+                     :proj-dir proj-dir})]
+    nil)
 
   )
