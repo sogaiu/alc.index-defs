@@ -27,13 +27,14 @@
           (assert result
             (str "failed to remove TAGS file for: " proj-dir)))))
     (aiif/reset-cache!)
-    (let [ctx {:cache aiif/cache
+    (let [start-time (System/currentTimeMillis)
+          ctx {:cache aiif/cache
                :checked-opts checked-opts
                :format format
                :opts opts
                :proj-dir proj-dir
                :table-path table-path
-               :times [[:start-time (System/currentTimeMillis)]]}
+               :times [[:start-time start-time]]}
           ctx (if analysis-path
                 (let [analysis (aiia/load-analysis analysis-path checked-opts)]
                   ;; XXX: lint-paths unavailable
@@ -104,17 +105,13 @@
         :else ; should not happen
         (throw (Exception.
                  (str "Unrecognized format: " format))))
-      (let [duration (- (System/currentTimeMillis) (-> (:times ctx)
-                                                     (nth 0)
-                                                     (nth 1)))]
+      (let [end-time (System/currentTimeMillis)]
         (when verbose
-          ;; (println (str "  duration: "
-          ;;            (- (System/currentTimeMillis) post-massaging-time)
-          ;;            " ms"))
           (println (str "-------------------------"))
-          (println (str "total duration: " duration " ms"))))
-      ;; send this somewhere for examination if desired
-      ctx)))
+          (println (str "total duration: " (- end-time start-time) " ms")))
+        ;; one use of returning the following is post-mortem examination
+        (update ctx
+          :times conj [:end-time end-time])))))
 
 (comment
 
