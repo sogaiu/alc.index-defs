@@ -13,7 +13,6 @@
         opts (merge opts
                (aio/merge-only-map-strs args))
         opts (assoc opts
-
                :format :ctags)]
     (aic/do-it! opts))
   (flush)
