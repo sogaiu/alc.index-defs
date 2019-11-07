@@ -1,7 +1,7 @@
-(ns alc.index-defs.analyze
+(ns alc.index-defs.impl.analyze
   (:require
-   [alc.index-defs.fs :as aif]
-   [alc.index-defs.paths :as aip]
+   [alc.index-defs.impl.fs :as aiif]
+   [alc.index-defs.impl.paths :as aiip]
    [clj-kondo.core :as cc]))
 
 (defn analyze-paths
@@ -20,7 +20,7 @@
          (map (fn [path]
                 (let [f (java.io.File. path)]
                   (if (not (.isAbsolute f))
-                    (aif/path-join proj-root path)
+                    (aiif/path-join proj-root path)
                     path)))
            paths)
          results (cc/run! {:lint lint-paths
@@ -51,7 +51,7 @@
          (println (str "  >> classpath computation by: "
                     (clojure.string/join " " cp-command)
                     " <<")))
-       (let [path-desc (aip/get-lint-paths :custom
+       (let [path-desc (aiip/get-lint-paths :custom
                          proj-root {:cp-command cp-command
                                     :verbose verbose})]
          (assert (not= path-desc "")
@@ -60,28 +60,28 @@
      ;; possibly method is supplied
      :else
      (let [shadow-file (java.io.File.
-                         (aif/path-join proj-root
+                         (aiif/path-join proj-root
                            "shadow-cljs.edn"))
            shadow-exists (.exists shadow-file)
            _ (when (and verbose
                      shadow-exists)
                (println  "  found shadow-cljs.edn"))
            deps-file (java.io.File.
-                       (aif/path-join proj-root
+                       (aiif/path-join proj-root
                          "deps.edn"))
            deps-exists (.exists deps-file)
            _ (when (and verbose
                      deps-exists)
                (println  "  found deps.edn"))
            project-clj-file (java.io.File.
-                              (aif/path-join proj-root
+                              (aiif/path-join proj-root
                                 "project.clj"))
            project-clj-exists (.exists project-clj-file)
            _ (when (and verbose
                      project-clj-exists)
                (println  "  found project.clj"))
            build-boot-file (java.io.File.
-                             (aif/path-join proj-root
+                             (aiif/path-join proj-root
                                "build.boot"))
            build-boot-exists (.exists build-boot-file)
            _ (when (and verbose
@@ -108,7 +108,7 @@
            proj-root))
        (when verbose
          (println (str "  >> classpath computation by: " (name method) " <<")))
-       (let [path-desc (aip/get-lint-paths method
+       (let [path-desc (aiip/get-lint-paths method
                          proj-root {:verbose verbose})]
          (assert (not= path-desc "")
            "No paths to analyze")

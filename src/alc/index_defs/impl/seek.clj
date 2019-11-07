@@ -1,4 +1,4 @@
-(ns alc.index-defs.seek)
+(ns alc.index-defs.impl.seek)
 
 ;; XXX: 1-based rows and cols? - clj-kondo is internally 1-based
 
@@ -35,7 +35,7 @@
     (+ pos (dec col-no))))
 
 (comment
-  
+
   (def sample-src
     "(ns hi.core)
 

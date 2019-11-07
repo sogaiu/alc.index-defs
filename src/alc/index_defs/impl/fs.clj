@@ -1,4 +1,4 @@
-(ns alc.index-defs.fs)
+(ns alc.index-defs.impl.fs)
 
 (def cache
   (atom {}))

@@ -1,6 +1,6 @@
-(ns alc.index-defs.paths
+(ns alc.index-defs.impl.paths
   (:require
-   [alc.index-defs.fs :as aif]
+   [alc.index-defs.impl.fs :as aiif]
    [clojure.java.shell :as cjs]))
 
 (defmulti get-lint-paths
@@ -59,10 +59,10 @@
 (defmethod get-lint-paths :shadow-cljs
   [_ proj-root {:keys [:verbose]}]
   (let [yarn-lock (java.io.File.
-                    (aif/path-join proj-root
+                    (aiif/path-join proj-root
                       "yarn.lock"))
         pkg-lock (java.io.File.
-                   (aif/path-join proj-root
+                   (aiif/path-join proj-root
                      "package-lock.json"))
         yarn? (.exists yarn-lock)
         _ (when (and verbose yarn?)

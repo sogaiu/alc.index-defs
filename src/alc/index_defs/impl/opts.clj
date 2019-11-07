@@ -1,4 +1,4 @@
-(ns alc.index-defs.opts)
+(ns alc.index-defs.impl.opts)
 
 (defn merge-only-map-strs
   [map-strs]

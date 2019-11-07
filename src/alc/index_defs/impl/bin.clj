@@ -1,4 +1,4 @@
-(ns alc.index-defs.bin)
+(ns alc.index-defs.impl.bin)
 
 (defn append-etags-section-header
   [sb path]

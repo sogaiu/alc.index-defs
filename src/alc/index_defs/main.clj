@@ -1,7 +1,7 @@
 (ns alc.index-defs.main
   (:require
    [alc.index-defs.core :as aic]
-   [alc.index-defs.opts :as aio]))
+   [alc.index-defs.impl.opts :as aiio]))
 
 (defn -main
   [& args]
@@ -12,7 +12,7 @@
                 first-str-opt
                 (System/getProperty "user.dir"))}
         opts (merge opts
-               (aio/merge-only-map-strs args))]
+               (aiio/merge-only-map-strs args))]
     (aic/do-it! opts))
   (flush)
   (System/exit 0))
