@@ -1,7 +1,8 @@
 (ns alc.index-defs.impl.paths
   (:require
    [alc.index-defs.impl.fs :as aiif]
-   [clojure.java.shell :as cjs]))
+   [clojure.java.shell :as cjs]
+   [clojure.string :as cs]))
 
 (defmulti get-lint-paths
   (fn [method proj-root opts]
@@ -16,7 +17,7 @@
         "  exit\n" exit "\n"
         "  out:\n" out "\n"
         "  err:\n" err "\n"))
-    (clojure.string/trim out)))
+    (cs/trim out)))
 
 ;; XXX: any benefit in using tools.deps directly?
 (defmethod get-lint-paths :clj
@@ -29,7 +30,7 @@
         "  out:\n" out "\n"
         "  err:\n" err "\n"))
     ;; out has a trailing newline because clj uses echo
-    (clojure.string/trim out)))
+    (cs/trim out)))
 
 (defmethod get-lint-paths :custom
   [_ proj-root {:keys [:cp-command :verbose]}]
@@ -37,12 +38,12 @@
                                     (apply cjs/sh cp-command))]
     (assert (= 0 exit)
       (str "`"
-        (clojure.string/join " " cp-command)
+        (cs/join " " cp-command)
         "` failed to determine classpath\n"
         "  exit\n" exit "\n"
         "  out:\n" out "\n"
         "  err:\n" err "\n"))
-    (clojure.string/trim out)))
+    (cs/trim out)))
 
 (defmethod get-lint-paths :lein
   [_ proj-root {:keys [:verbose]}]
@@ -53,7 +54,7 @@
         "  exit\n" exit "\n"
         "  out:\n" out "\n"
         "  err:\n" err "\n"))
-    (clojure.string/trim out)))
+    (cs/trim out)))
 
 ;; XXX: yarn over npx -- provide way to force one?
 (defmethod get-lint-paths :shadow-cljs
@@ -120,4 +121,4 @@
         "  exit\n" exit "\n"
         "  out:\n" out "\n"
         "  err:\n" err "\n"))
-    (clojure.string/trim out)))
+    (cs/trim out)))

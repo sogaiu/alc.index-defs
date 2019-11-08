@@ -181,6 +181,8 @@
            :proj-dir (aiif/path-join (System/getenv "HOME")
                        "src/antoine")})
 
+  (require '[clojure.string :as cs])
+
   (let [m2-repos-path (aiif/path-join (System/getenv "HOME")
                         ".m2/repository")
         ;; XXX: order tried first
@@ -193,7 +195,7 @@
                    "thheller/shadow-cljs/2.8.55/shadow-cljs-2.8.55.jar"
                    "thheller/shadow-client/1.3.2/shadow-client-1.3.2.jar"
                    "org/clojure/core.async/0.4.500/core.async-0.4.500.jar"]
-        lint-paths (clojure.string/join ":"
+        lint-paths (cs/join ":"
                      (concat ["src"] (map (fn [jar-path]
                                             (aiif/path-join m2-repos-path
                                               jar-path))

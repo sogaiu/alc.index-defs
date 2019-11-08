@@ -1,4 +1,6 @@
-(ns alc.index-defs.impl.fs)
+(ns alc.index-defs.impl.fs
+  (:require
+   [clojure.string :as cs]))
 
 (def cache
   (atom {}))
@@ -59,6 +61,6 @@
   (loop [[a-path & the-rest] leading-paths]
     (if (nil? a-path)
       path
-      (if (clojure.string/starts-with? path a-path)
+      (if (cs/starts-with? path a-path)
         (path-split path a-path)
         (recur the-rest)))))

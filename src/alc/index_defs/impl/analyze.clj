@@ -2,7 +2,8 @@
   (:require
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.paths :as aiip]
-   [clj-kondo.core :as cc]))
+   [clj-kondo.core :as cc]
+   [clojure.string :as cs]))
 
 (defn analyze-paths
   ([proj-root path-desc]
@@ -11,7 +12,7 @@
    (when verbose
      (println "* analyzing project source and deps w/ clj-kondo..."))
    (let [start-time (System/currentTimeMillis)
-         paths (clojure.string/split path-desc
+         paths (cs/split path-desc
                  (re-pattern (System/getProperty "path.separator")))
          ;; some paths are relative, that can be a problem because
          ;; clj-kondo doesn't necessarily resolve them relative to
@@ -49,7 +50,7 @@
      (do
        (when verbose
          (println (str "  >> classpath computation by: "
-                    (clojure.string/join " " cp-command)
+                    (cs/join " " cp-command)
                     " <<")))
        (let [path-desc (aiip/get-lint-paths :custom
                          proj-root {:cp-command cp-command

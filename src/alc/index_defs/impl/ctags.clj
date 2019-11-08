@@ -3,7 +3,8 @@
    [alc.index-defs.impl.bin :as aiib]
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.tags :as aiit]
-   [clojure.java.io :as cji]))
+   [clojure.java.io :as cji]
+   [clojure.string :as cs]))
 
 (defn create-ctags
   [{:keys [:aka-table :ns-defs :proj-dir :table-path :var-defs
@@ -64,7 +65,7 @@
                   (re-find ctags-row-re row-str)]
               (recur row-strs
                 (if (and t-name
-                      (not (clojure.string/starts-with? t-name "!_TAG")))
+                      (not (cs/starts-with? t-name "!_TAG")))
                   ;; there are also lines like:
                   ;;
                   ;;   !_TAG_FILE_FORMAT  {version-number}  /optional comment/

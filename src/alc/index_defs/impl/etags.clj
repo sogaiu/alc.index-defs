@@ -3,7 +3,8 @@
    [alc.index-defs.impl.bin :as aiib]
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.seek :as aiis]
-   [alc.index-defs.impl.tags :as aiit]))
+   [alc.index-defs.impl.tags :as aiit]
+   [clojure.string :as cs]))
 
 ;; XXX: defrecords can yield defs where the id doesn't appear in
 ;;      the source at the point of definition
@@ -18,13 +19,13 @@
   (let [start-of-hint (aiis/seek-to-row src-str row)
         ;; longer strings are more brittle(?)
         ;; XXX: possibly look for second newline?
-        new-line-after-hint (clojure.string/index-of src-str
+        new-line-after-hint (cs/index-of src-str
                               "\n" start-of-hint)
         ;; XXX: still not quite right
-        space-after-hint-start (clojure.string/index-of src-str
+        space-after-hint-start (cs/index-of src-str
                                  " " start-of-hint)
         ;; XXX: not necessarily correct for some very short names (e.g. 'e')
-        start-of-id (clojure.string/index-of src-str
+        start-of-id (cs/index-of src-str
                       (str name) space-after-hint-start)]
     (when (and start-of-id
             new-line-after-hint)

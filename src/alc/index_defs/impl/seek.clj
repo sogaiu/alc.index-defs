@@ -1,4 +1,6 @@
-(ns alc.index-defs.impl.seek)
+(ns alc.index-defs.impl.seek
+  (:require
+   [clojure.string :as cs]))
 
 ;; XXX: 1-based rows and cols? - clj-kondo is internally 1-based
 
@@ -11,7 +13,7 @@
     (if (= 1 rows-to-go)
       search-from
       (recur (dec rows-to-go)
-        (let [search-idx (clojure.string/index-of string
+        (let [search-idx (cs/index-of string
                            "\n" search-from)]
           (assert (>= search-idx 0)
             (str "failed to seek to row in string: " row-no string))
@@ -26,7 +28,7 @@
               (if (= 1 rows-to-go)
                 search-from
                 (recur (dec rows-to-go)
-                  (let [search-idx (clojure.string/index-of string
+                  (let [search-idx (cs/index-of string
                                      "\n" search-from)]
                     (assert (>= search-idx 0)
                       (str "failed to seek to row, col in string: "
