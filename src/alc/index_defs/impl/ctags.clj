@@ -107,15 +107,15 @@
 (comment
 
   (read-ctags-into-nested-map
-    (aiif/path-join (System/getenv "HOME")
-      "src/alc.index-defs/tags"))
+    (.getPath (cji/file (System/getenv "HOME")
+                "src" "alc.index-defs" "tags")))
 
   (read-ctags-into-vector-of-maps
-    (aiif/path-join (System/getenv "HOME")
-      "src/alc.index-defs/tags"))
+    (.getPath (cji/file (System/getenv "HOME")
+                "src" "alc.index-defs" "tags")))
 
   (read-ctags-into-set-of-maps
-    (aiif/path-join (System/getenv "HOME")
-      "src/alc.index-defs/tags"))
+    (.getPath (cji/file (System/getenv "HOME")
+                "src" "alc.index-defs" "tags")))
 
   )

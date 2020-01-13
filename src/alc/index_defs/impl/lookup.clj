@@ -2,6 +2,7 @@
   (:require
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.seek :as aiis]
+   [clojure.java.io :as cji]
    [edamame.core :as ec]))
 
 (defn add-paths-to
@@ -20,9 +21,8 @@
             (let [jar-name (.getName (java.io.File. jar-path))]
               (assert jar-name
                 (str "failed to parse: " jar-path))
-              (let [visit-path (aiif/path-join
-                                 (aiif/path-join unzip-root jar-name)
-                                 sub-path)]
+              (let [visit-path (.getPath (cji/file unzip-root jar-name
+                                           sub-path))]
                 (assoc entry
                   :jar-path jar-path
                   :visit-path visit-path)))
@@ -55,32 +55,34 @@
   ;;
   ;; {:arity 2
   ;;  :col 18
-  ;;  :filename (aiif/path-join (System/getenv "HOME")
-  ;;              "src/sci/src/sci/impl/interpreter.cljc")
+  ;;  :filename (.getPath (cji/file (System/getenv "HOME")
+  ;;                        "src" "sci" "src" "sci" "impl" "interpreter.cljc"))
   ;;  :fixed-arities #{2}
   ;;  :from sci.impl.interpreter
   ;;  :lang :clj
   ;;  :name macroexpand
   ;;  :row 61
   ;;  :to sci.impl.macros}
-  (let [src-str (slurp (aiif/path-join (System/getenv "HOME")
-                         "src/sci/src/sci/impl/interpreter.cljc"))
+  (let [src-str (slurp (.getPath (cji/file (System/getenv "HOME")
+                                   "src" "sci" "src" "sci" "impl"
+                                   "interpreter.cljc")))
         spot (subs src-str (aiis/seek-to-row-col src-str 61 18))]
     (println (subs spot 0 10))
     (println (ec/parse-string spot)))
 
   ;; {:arity 2
   ;;  :col 15
-  ;;  :filename (aiif/path-join (System/getenv "HOME")
-  ;;              "src/sci/src/sci/impl/interpreter.cljc"
+  ;;  :filename (.getPath (cji/file (System/getenv "HOME")
+  ;;                        "src" "sci" "src" "sci" "impl" "interpreter.cljc"))
   ;;  :fixed-arities #{2}
   ;;  :from sci.impl.interpreter
   ;;  :lang :clj
   ;;  :name interpret
   ;;  :row 28
   ;;  :to sci.impl.interpreter}
-  (let [src-str (slurp (aiif/path-join (System/getenv "HOME")
-                         "src/sci/src/sci/impl/interpreter.cljc"))
+  (let [src-str (slurp (.getPath (cji/file (System/getenv "HOME")
+                                   "src" "sci" "src" "sci" "impl"
+                                   "interpreter.cljc")))
         spot (subs src-str (aiis/seek-to-row-col src-str 28 15))]
     (println (subs spot 0 10))
     (println (ec/parse-string spot)))
@@ -89,14 +91,17 @@
   ;;
   ;; {:arity 3
   ;;  :col 7
-  ;;  :filename "src/clojure/src/clj/clojure/java/io.clj"
+  ;;  :filename (.getPath
+  ;;              (cji/file "src" "clojure" "src" "clj" "clojure" "java"
+  ;;                "io.clj"))
   ;;  :fixed-arities #{3}
   ;;  :from clojure.java.io
   ;;  :name replace
   ;;  :row 41
   ;;  :to clojure.string}
-  (let [src-str (slurp (aiif/path-join (System/getenv "HOME")
-                         "src/clojure/src/clj/clojure/java/io.clj"))
+  (let [src-str (slurp (.getPath (cji/file (System/getenv "HOME")
+                                   "src" "clojure" "src" "clj" "clojure"
+                                   "java" "io.clj")))
         spot (subs src-str (aiis/seek-to-row-col src-str 41 7))]
     (println (subs spot 0 10))
     (println (ec/parse-string spot)))
@@ -166,43 +171,47 @@
 (comment
 
   (let [home-dir (System/getenv "HOME")
-        unzip-root "/tmp/alc.index-defs"]
+        unzip-root (.getPath (cji/file "tmp" "alc.index-defs"))]
     {;; example for something in a file in a jar file
      ;; key is a file path
-     (aiif/path-join unzip-root
-       "pathom-2.2.7.jar/com/wsscode/pathom/parser.cljc")
+     (.getPath (cji/file unzip-root
+                 "pathom-2.2.7.jar" "com" "wsscode" "pathom" "parser.cljc"))
      ;; value is a vector of definition entries
-     [{:filename (aiif/path-join home-dir
-                   (str ".m2/repository/"
-                     "com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-                     ":"
-                     "com/wsscode/pathom/parser.cljc"))
+     [{:filename (.getPath (cji/file home-dir
+                             ".m2" "repository"
+                             "com" "wsscode" "pathom" "2.2.7"
+                             "pathom-2.2.7.jar"
+                             ":"
+                             "com" "wsscode" "pathom" "parser.cljc"))
        :row 13
        :col 1
        :ns 'com.wsscode.pathom.parser
        :name 'expr->ast
        :lang :clj
-       :visit-path (aiif/path-join unzip-root
-                     "pathom-2.2.7.jar/com/wsscode/pathom/parser.cljc")
+       :visit-path (.getPath (cji/file unzip-root
+                               "pathom-2.2.7.jar" "com" "wsscode" "pathom"
+                               "parser.cljc"))
        :jar-path
-       (aiif/path-join home-dir
-         ".m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar")}
+       (.getPath (cji/file home-dir
+                   ".m2" "repository" "com" "wsscode" "pathom" "2.2.7"
+                   "pathom-2.2.7.jar"))}
       ;; likely more definition entries follow
       ]
      ;; example of something in a non-jar file
      ;; key is a file path
-     (aiif/path-join home-dir
-       "src/antoine/src/antoine/renderer.cljs")
+     (.getPath (cji/file home-dir
+                 "src" "antoine" "src" "antoine" "renderer.cljs"))
      ;; value is a vector of definition entries
-     [{:filename (aiif/path-join home-dir
-                   "src/antoine/src/antoine/renderer.cljs")
+     [{:filename (.getPath (cji/file home-dir
+                             "src" "antoine" "src" "antoine" "renderer.cljs"))
        :row 64
        :col 1
        :ns 'antoine.renderer
        :name 'init
        :fixed-arities #{0}
-       :visit-path (aiif/path-join home-dir
-                     "src/antoine/src/antoine/renderer.cljs")}
+       :visit-path (.getPath (cji/file home-dir
+                               "src" "antoine" "src" "antoine"
+                               "renderer.cljs"))}
       ;; likely more definition entries follow
       ]
      ;; likley more key-value pairs follow

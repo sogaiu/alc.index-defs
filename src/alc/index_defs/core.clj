@@ -6,7 +6,8 @@
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.lookup :as aiil]
    [alc.index-defs.impl.opts :as aiio]
-   [alc.index-defs.impl.unzip :as aiiu]))
+   [alc.index-defs.impl.unzip :as aiiu]
+   [clojure.java.io :as cji]))
 
 ;; XXX: creating one TAGS file for the project source and 
 ;;      possibly one for all dependencies (or one for each dep)
@@ -16,7 +17,7 @@
   (let [{:keys [:analysis-path :cp-command :format :method :out-name
                 :overwrite :paths :proj-dir :verbose] :as checked-opts}
         (aiio/check opts)
-        table-path (aiif/path-join proj-dir out-name)
+        table-path (.getPath (cji/file proj-dir out-name))
         tags-file (java.io.File. table-path)]
     ;; XXX: delete later -- as late as possible?
     (if (not overwrite)
@@ -49,9 +50,7 @@
                     :analysis (:analysis results)
                     :lint-paths lint-paths)))
           ctx (assoc ctx
-                :unzip-root (aiif/path-join
-                              (aiif/path-join proj-dir ".alc-id")
-                              "unzip"))
+                :unzip-root (.getPath (cji/file proj-dir ".alc-id" "unzip")))
           ;; ensure unzip-root dir exists
           _ (assert (aiif/ensure-dir
                       (java.io.File. (:unzip-root ctx)))
@@ -115,76 +114,80 @@
 
 (comment
 
-  (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/adorn")})
+  (let [res (do-it! {:overwrite true
+                     :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                           "src" "adorn"))})]
+    nil)
+
+  ;; XXX: evaluating any of the following is likely to produce lots of output
+  ;;      wrapping in a let or tap> might be helpful
 
   ;; XXX: should error
   (do-it! {:overwrite true
            :method :shadow-cljs
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/adorn")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "adorn"))})
 
   ;; just one file
   (do-it! {:overwrite true
-           :paths "src/script.clj"
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/adorn")})
+           :paths "src/script.clj" ; XXX: windows paths?
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "adorn"))})
 
-  (do-it! {:proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")})
+  (do-it! {:proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))})
 
-  (do-it! {:proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")
+  (do-it! {:proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))
            :verbose false})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))})
 
   (do-it! {:format :ctags
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))})
 
   (do-it! {:format :ctags
            :out-name ".tags"
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alens")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alens"))})
 
-  (do-it! {:proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/antoine")
+  (do-it! {:proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "antoine"))
            :verbose true})
 
   (do-it! {:cp-command ["yarn" "shadow-cljs" "classpath"]
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/antoine")
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "antoine"))
            :verbose true})
 
   (do-it! {:method :clj
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/antoine")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "antoine"))})
 
   (do-it! {:format :ctags
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/antoine")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "antoine"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/antoine")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "antoine"))})
 
   (require '[clojure.string :as cs])
 
-  (let [m2-repos-path (aiif/path-join (System/getenv "HOME")
-                        ".m2/repository")
+  (let [m2-repos-path (.getPath (cji/file (System/getenv "HOME")
+                                  ".m2" "repository"))
         ;; XXX: order tried first
         ;; jar-paths ["com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
         ;;            "thheller/shadow-client/1.3.2/shadow-client-1.3.2.jar"
@@ -197,158 +200,162 @@
                    "org/clojure/core.async/0.4.500/core.async-0.4.500.jar"]
         lint-paths (cs/join ":"
                      (concat ["src"] (map (fn [jar-path]
-                                            (aiif/path-join m2-repos-path
-                                              jar-path))
+                                            (.getPath (cji/file m2-repos-path
+                                                        jar-path)))
                                        jar-paths)))]
     (println "lint-paths:" lint-paths)
     (do-it! {:overwrite true
              :paths lint-paths
-             :proj-dir (aiif/path-join (System/getenv "HOME")
-                         "src/antoine")}))
+             :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                   "src" "antoine"))}))
 
-  ;; XXX: shadow-cljs version must be >= 2.8.53
+  ;; XXX: shadow-c)ljs version must be >= 2.8.53
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/atom-chlorine")})
-
-  (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/augistints")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "atom-chlorine"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/babashka")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "augistints"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/badigeon")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "babashka"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/clj-kondo")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "badigeon"))})
+
+  (do-it! {:overwrite true
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "clj-kondo"))})
 
   (do-it! {:method :lein
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/clj-kondo")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "clj-kondo"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/cljfmt/cljfmt")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "cljfmt" "cljfmt"))})
 
   (do-it! {:overwrite true
-           :paths "src/clj/clojure"
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/clojure")})
+           :paths "src/clj/clojure" ; XXX: windows paths?
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "clojure"))})
 
   ;; XXX: cannot process clojure clr yet?
   (do-it! {:overwrite true
-           :paths "Clojure/Clojure.Source/clojure"
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/clojure-clr")})
+           :paths "Clojure/Clojure.Source/clojure" ; XXX: windows paths?
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "clojure-clr"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/clojurescript")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "clojurescript"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/compliment")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "compliment"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/conch")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "conch"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/conjure")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "conjure"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/core.async")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "core.async"))})
 
   ;; project.clj appears broken atm
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/core.logic")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "core.logic"))})
 
-  (do-it! {:proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/debug-repl")})
+  (do-it! {:proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "debug-repl"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/edamame")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "edamame"))})
 
   ;; XXX: SNAPSHOT dep in deps.edn causing problems
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/figwheel-main")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "figwheel-main"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/fs")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "fs"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/jet")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "jet"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/liquid")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "liquid"))})
 
   ;; uses boot
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/lumo")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "lumo"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/punk")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "punk"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/reagent")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "reagent"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/re-frame")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "re-frame"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/repl-tooling")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "repl-tooling"))})
 
   ;; XXX: potemkin makes things hard?
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/rewrite-clj")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "rewrite-clj"))})
 
   (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/replique")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "replique"))})
 
   ;; has shadow-cljs, but should not use that for indexing
   (do-it! {:method :clj
            :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/shadow-cljs")})
+           :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "shadow-cljs"))})
 
   ;; has shadow-cljs, but should not use that for indexing
-  (do-it! {:method :clj
-           :overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/sci")})
+  (let [res (do-it! {:method :clj
+                     :overwrite true
+                     :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                           "src" "sci"))})]
+    nil)
 
-  (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/specter")})
+  (let [res (do-it! {:overwrite true
+                     :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                           "src" "specter"))})]
+    nil)
 
-  (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/tools.deps.alpha")})
+  (let [res (do-it! {:overwrite true
+                     :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                           "src" "tools.deps.alpha"))})]
+    nil)
 
-  (do-it! {:overwrite true
-           :proj-dir (aiif/path-join (System/getenv "HOME")
-                       "src/zprint")})
+  (let [res (do-it! {:overwrite true
+                     :proj-dir (.getPath (cji/file (System/getenv "HOME")
+                                           "src" "zprint"))})]
+    nil)
 
   )
 
@@ -358,7 +365,8 @@
 ;;
 ;;   clj-kondo \
 ;;     --lint `clj -Spath` \
-;;     --config '{:output {:analysis true :format :edn :canonical-paths true}}' \
+;;     --config '{:output {:analysis true :format :edn \
+;;                :canonical-paths true}}' \
 ;;   > clj-kondo-analysis-full-paths.edn
 ;;
 ;; see script/make-analysis.sh
@@ -369,54 +377,55 @@
 ;;      be made more robust -- perhaps warnings should be emitted at least.
 (comment
 
-  (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/adorn")
+  (let [proj-dir (.getPath (cji/file (System/getenv "HOME")
+                             "src" "adorn"))
         ctx (do-it! {:analysis-path
-                     (aiif/path-join proj-dir
-                       "clj-kondo-analysis-full-paths.edn")
+                     (.getPath (cji/file proj-dir
+                                 "clj-kondo-analysis-full-paths.edn"))
                      :overwrite true
                      :proj-dir proj-dir})]
     nil)
 
   ;; XXX: remember to always regenerate the analysis file before running this
   ;;      as the code base can get out of sync with the analysis
-  (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/alc.index-defs")
+  (let [proj-dir (.getPath (cji/file (System/getenv "HOME")
+                             "src" "alc.index-defs"))
         ctx (do-it! {:analysis-path
-                     (aiif/path-join proj-dir
-                       "clj-kondo-analysis-full-paths.edn")
+                     (.getPath (cji/file proj-dir
+                                 "clj-kondo-analysis-full-paths.edn"))
                      :format :ctags
                      :overwrite true
                      :proj-dir proj-dir})]
     nil)
 
-  (let [proj-src-dir (aiif/path-join (System/getenv "HOME")
-                       "src/alc.index-defs")
+  (let [proj-src-dir (.getPath (cji/file (System/getenv "HOME")
+                                 "src" "alc.index-defs"))
         psd-mod (-> proj-src-dir
                   java.io.File.
                   .lastModified)
         analysis-file
-        (aiif/path-join (System/getenv "HOME")
-          "src/alc.index-defs/clj-kondo-analysis-full-paths.edn")
+        (.getPath (cji/file (System/getenv "HOME")
+                    "src" "alc.index-defs"
+                    "clj-kondo-analysis-full-paths.edn"))
         af-mod (-> analysis-file
                  java.io.File.
                  .lastModified)]
     (when (> psd-mod af-mod)
       (println "project source dir appears newer than analysis file")))
 
-  (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/antoine")
+  (let [proj-dir (.getPath (cji/file (System/getenv "HOME")
+                             "src" "antoine"))
         ctx (do-it! {:analysis-path
-                     (aiif/path-join proj-dir
-                       "clj-kondo-analysis-full-paths.edn")
+                     (.getPath (cji/file proj-dir
+                                 "clj-kondo-analysis-full-paths.edn"))
                      :proj-dir proj-dir})]
     nil)
 
-    (let [proj-dir (aiif/path-join (System/getenv "HOME")
-                   "src/clj-kondo")
+  (let [proj-dir (.getPath (cji/file (System/getenv "HOME")
+                             "src" "clj-kondo"))
         ctx (do-it! {:analysis-path
-                     (aiif/path-join proj-dir
-                       "clj-kondo-analysis-full-paths.edn")
+                     (.getPath (cji/file proj-dir
+                                 "clj-kondo-analysis-full-paths.edn"))
                      :overwrite true
                      :proj-dir proj-dir})]
     nil)
