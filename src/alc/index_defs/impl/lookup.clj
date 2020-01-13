@@ -109,7 +109,16 @@
     (fn [{:keys [:col :name :row :visit-path] :as entry}]
       (if (and col row visit-path)
         (let [src-str (aiif/get-content visit-path)
-              spot (subs src-str (aiis/seek-to-row-col src-str row col))
+              file-pos (aiis/seek-to-row-col src-str row col)
+              spot (try
+                     (subs src-str file-pos)
+                     (catch Exception e
+                       (println "exception:"
+                         (get-in (Throwable->map e) [:via 0 :message]))
+                       (println (str "where: "
+                                  "subs w/ visit-path, file-pos: "
+                                  visit-path ": "
+                                  file-pos))))
               full-name (when (not= name 'fn*)
                           (try
                             ;; XXX: need to customize parsing?
