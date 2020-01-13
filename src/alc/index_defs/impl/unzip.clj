@@ -25,13 +25,12 @@
               (when (and skip-class
                       (not (re-find #"^.*\.class$" e-path)))
                 (let [dest-dir-path (if e-dir
-                                      (aiif/path-join unjar-dir-path e-dir)
+                                      (.getPath (cji/file unjar-dir-path e-dir))
                                       unjar-dir-path)]
                   (when (not (aiif/ensure-dir (cji/file dest-dir-path)))
                     (throw (Exception.
                              (str "failed to prepare dest dir for: " e-dir))))
-                  (let [dest-file (cji/file
-                                    (aiif/path-join dest-dir-path e-name))]
+                  (let [dest-file (cji/file dest-dir-path e-name)]
                     (when (not dest-file)
                       (throw (Exception.
                                (str "java.io.File creation failed: " e-name))))
@@ -40,9 +39,10 @@
 (comment
 
   (unzip-jar
-    (aiif/path-join (System/getenv "HOME")
-      ".m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar")
-    "/tmp")
+    (.getPath (cji/file (System/getenv "HOME")
+                ".m2" "repository" "com" "wsscode" "pathom" "2.2.7"
+                "pathom-2.2.7.jar"))
+    (System/getProperty "java.io.tmpdir"))
 
   )
 

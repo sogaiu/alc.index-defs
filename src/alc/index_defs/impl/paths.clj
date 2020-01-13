@@ -1,6 +1,6 @@
 (ns alc.index-defs.impl.paths
   (:require
-   [alc.index-defs.impl.fs :as aiif]
+   [clojure.java.io :as cji]
    [clojure.java.shell :as cjs]
    [clojure.string :as cs]))
 
@@ -59,12 +59,8 @@
 ;; XXX: yarn over npx -- provide way to force one?
 (defmethod get-lint-paths :shadow-cljs
   [_ proj-root {:keys [:verbose]}]
-  (let [yarn-lock (java.io.File.
-                    (aiif/path-join proj-root
-                      "yarn.lock"))
-        pkg-lock (java.io.File.
-                   (aiif/path-join proj-root
-                     "package-lock.json"))
+  (let [yarn-lock (cji/file proj-root "yarn.lock")
+        pkg-lock (cji/file proj-root "package-lock.json")
         yarn? (.exists yarn-lock)
         _ (when (and verbose yarn?)
             (println "  found yarn.lock"))

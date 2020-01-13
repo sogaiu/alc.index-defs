@@ -1,8 +1,8 @@
 (ns alc.index-defs.impl.analyze
   (:require
-   [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.paths :as aiip]
    [clj-kondo.core :as cc]
+   [clojure.java.io :as cji]
    [clojure.string :as cs]))
 
 (defn analyze-paths
@@ -21,7 +21,7 @@
          (map (fn [path]
                 (let [f (java.io.File. path)]
                   (if (not (.isAbsolute f))
-                    (aiif/path-join proj-root path)
+                    (.getPath (cji/file proj-root path))
                     path)))
            paths)
          results (cc/run! {:lint lint-paths
@@ -60,30 +60,22 @@
          (analyze-paths proj-root path-desc opts)))
      ;; possibly method is supplied
      :else
-     (let [shadow-file (java.io.File.
-                         (aiif/path-join proj-root
-                           "shadow-cljs.edn"))
+     (let [shadow-file (cji/file proj-root "shadow-cljs.edn")
            shadow-exists (.exists shadow-file)
            _ (when (and verbose
                      shadow-exists)
                (println  "  found shadow-cljs.edn"))
-           deps-file (java.io.File.
-                       (aiif/path-join proj-root
-                         "deps.edn"))
+           deps-file (cji/file proj-root "deps.edn")
            deps-exists (.exists deps-file)
            _ (when (and verbose
                      deps-exists)
                (println  "  found deps.edn"))
-           project-clj-file (java.io.File.
-                              (aiif/path-join proj-root
-                                "project.clj"))
+           project-clj-file (cji/file proj-root "project.clj")
            project-clj-exists (.exists project-clj-file)
            _ (when (and verbose
                      project-clj-exists)
                (println  "  found project.clj"))
-           build-boot-file (java.io.File.
-                             (aiif/path-join proj-root
-                               "build.boot"))
+           build-boot-file (cji/file proj-root "build.boot")
            build-boot-exists (.exists build-boot-file)
            _ (when (and verbose
                      build-boot-exists)
@@ -140,15 +132,16 @@
    :analysis
    {:namespace-definitions
     ;; sometimes there's :lang, but only if in .cljc file
-    [{:filename (str (System/getenv "HOME")
-                  "/src/antoine/src/antoine/renderer.cljs")
+    [{:filename (.getPath (cji/file (System/getenv "HOME")
+                            "src" "antoine" "src" "antoine" "renderer.cljs"))
       :row 1
       :col 1
       :name 'antoine.renderer}
-     {:filename (str (System/getenv "HOME")
-                  "/.m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-                  ":"
-                  "com/wsscode/pathom/parser.cljc")
+     {:filename (.getPath (cji/file (System/getenv "HOME")
+                            ".m2" "repository" "com" "wsscode" "pathom"
+                            "2.2.7" "pathom-2.2.7.jar"
+                            ":"
+                            "com" "wsscode" "pathom" "parser.cljc"))
       :row 1
       :col 1
       :name 'com.wsscode.pathom.parser
@@ -157,18 +150,19 @@
     ;; sometimes there's :lang, but only if in .cljc file
     ;; sometimes there's :alias, but it is extra info about the
     ;; namespace - the entry is not just about the alias
-    [{:filename (str (System/getenv "HOME")
-                  "/src/antoine/src/antoine/renderer.cljs")
+    [{:filename (.getPath (cji/file (System/getenv "HOME")
+                            "src" "antoine" "src" "antoine" "renderer.cljs"))
       :row 3 ; row of :to (e.g. of in [clojure.core.async] in require)
       :col 5 ; col of :to (e.g. of in [clojure.core.async] in require)
       :from 'antoine.renderer
       :to 'clojure.core.async}]
     :var-definitions
     ;; sometimes there's :lang, but only if in .cljc file
-    [{:filename (str (System/getenv "HOME")
-                  "/.m2/repository/com/wsscode/pathom/2.2.7/pathom-2.2.7.jar"
-                  ":"
-                  "com/wsscode/pathom/parser.cljc")
+    [{:filename (.getPath (cji/file (System/getenv "HOME")
+                            ".m2" "repository" "com" "wsscode" "pathom"
+                            "2.2.7" "pathom-2.2.7.jar"
+                            ":"
+                            "com" "wsscode" "pathom" "parser.cljc"))
       :row 13
       :col 1
       :ns 'com.wsscode.pathom.parser
@@ -179,11 +173,12 @@
     [{:name defmacro
       :var-args-min-arity 2 ; optional
       :lang :cljs  ; optional
-      :filename (str (System/getenv "HOME")
-                  "/.m2/repository/org/clojure/clojurescript/1.10.520/"
-                  "clojurescript-1.10.520.jar"
-                  ":"
-                  "cljs/spec/gen/alpha.cljc")
+      :filename (.getPath (cji/file (System/getenv "HOME")
+                            ".m2" "repository" "org" "clojure"
+                            "clojurescript" "1.10.520"
+                            "clojurescript-1.10.520.jar"
+                            ":"
+                            "cljs" "spec" "gen" "alpha.cljc"))
       :from 'cljs.spec.gen.alpha
       :macro true ; optional
       :col 1
