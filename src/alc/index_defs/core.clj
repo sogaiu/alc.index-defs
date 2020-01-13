@@ -21,7 +21,7 @@
     ;; XXX: delete later -- as late as possible?
     (if (not overwrite)
       (assert (not (.exists tags-file))
-        (str "TAGS already exists for: " proj-dir))
+        (str out-name " already exists for: " proj-dir))
       (when (.exists tags-file)
         (let [result (.delete tags-file)]
           (assert result
