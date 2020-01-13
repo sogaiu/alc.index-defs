@@ -363,13 +363,12 @@
 ;;
 ;; see script/make-analysis.sh
 ;;
-;; XXX: running do-it! with an out-of-date lint data file may cause
+;; XXX: running do-it! with an out-of-date analysis data file may cause
 ;;      problems.  e.g. the current code doesn't try to guard against if
 ;;      files are shorter or out-of-sync with the analysis.  this could
 ;;      be made more robust -- perhaps warnings should be emitted at least.
 (comment
 
-  ;; XXXL lots of exceptions
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
                    "src/adorn")
         ctx (do-it! {:analysis-path
@@ -379,6 +378,8 @@
                      :proj-dir proj-dir})]
     nil)
 
+  ;; XXX: remember to always regenerate the analysis file before running this
+  ;;      as the code base can get out of sync with the analysis
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
                    "src/alc.index-defs")
         ctx (do-it! {:analysis-path
@@ -389,11 +390,34 @@
                      :proj-dir proj-dir})]
     nil)
 
+  (let [proj-src-dir (aiif/path-join (System/getenv "HOME")
+                       "src/alc.index-defs")
+        psd-mod (-> proj-src-dir
+                  java.io.File.
+                  .lastModified)
+        analysis-file
+        (aiif/path-join (System/getenv "HOME")
+          "src/alc.index-defs/clj-kondo-analysis-full-paths.edn")
+        af-mod (-> analysis-file
+                 java.io.File.
+                 .lastModified)]
+    (when (> psd-mod af-mod)
+      (println "project source dir appears newer than analysis file")))
+
   (let [proj-dir (aiif/path-join (System/getenv "HOME")
                    "src/antoine")
         ctx (do-it! {:analysis-path
                      (aiif/path-join proj-dir
-                       "clj-kondo-analysis-full-paths-2.edn")
+                       "clj-kondo-analysis-full-paths.edn")
+                     :proj-dir proj-dir})]
+    nil)
+
+    (let [proj-dir (aiif/path-join (System/getenv "HOME")
+                   "src/clj-kondo")
+        ctx (do-it! {:analysis-path
+                     (aiif/path-join proj-dir
+                       "clj-kondo-analysis-full-paths.edn")
+                     :overwrite true
                      :proj-dir proj-dir})]
     nil)
 
