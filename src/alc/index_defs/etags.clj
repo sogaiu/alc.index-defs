@@ -1,7 +1,7 @@
 (ns alc.index-defs.etags
   (:require
    [alc.index-defs.core :as aic]
-   [alc.index-defs.opts :as aio]))
+   [alc.index-defs.impl.opts :as aii.o]))
 
 (defn -main [& args]
   (let [opts {:proj-dir
@@ -11,7 +11,7 @@
                 first-str-opt
                 (System/getProperty "user.dir"))}
         opts (merge opts
-               (aio/merge-only-map-strs args))
+               (aii.o/merge-only-map-strs args))
         opts (assoc opts
                :format :etags)]
     (aic/do-it! opts))
