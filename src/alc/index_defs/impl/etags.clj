@@ -85,7 +85,7 @@
           _ (assert (not (nil? etag-row-entries))
               (str "failed to prepare tag input entries for: " visit-path))
           section (aiib/make-etags-section {:file-path file-path
-                                           :entries etag-row-entries})
+                                            :entries etag-row-entries})
           _ (assert (not (nil? section))
               (str "failed to prepare section for: " visit-path))]
       (aiit/write-tags table-path section))))

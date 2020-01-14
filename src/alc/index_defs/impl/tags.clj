@@ -18,4 +18,3 @@
   [file-path section]
   (spit file-path
     (.toString section) :append true))
-

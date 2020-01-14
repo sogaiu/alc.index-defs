@@ -48,8 +48,10 @@
 ;; make-section takes as input something like:
 (comment
 
-  {:file-path (str (System/getenv "HOME")
-                "src/antoine/renderer.cljs")
+  (require '[clojure.java.io :as cji])
+
+  {:file-path (.getPath (cji/file (System/getenv "HOME")
+                          "src" "antoine" "renderer.cljs"))
    :entries [{:hint "(ns antoine.renderer"
               :identifier 'antoine.renderer
               :row 1}
