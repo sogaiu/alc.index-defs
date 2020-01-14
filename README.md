@@ -12,25 +12,9 @@ This is a means to an end -- the primary goal is to be able to "jump to definiti
 
 * clj / clojure
 
-## Use Cases
+## Use Cases and Limitations
 
-* Want to easily navigate source without firing up a REPL?  For example, just downloaded a project and don't have it running?  Or may be sometimes you don't want to have to start a REPL just to examine some code paths?  [1]
-
-* The editor setup you're using doesn't support jumping to definitions within dependencies?
-
-* The editor setup you're using can't account for the namespace portion of identifiers?
-
-* The editor setup you're using doesn't handle enough of the identifiers in your code base, possibly because it doesn't know how to appropriately determine identifiers?
-
-[1] Note that the tool that's typically used to resolve / fetch dependencies for the project is still needed.
-
-## Limitations
-
-* The index file generation is not fast in human perception terms.  That means this method is not particularly suited to tracking changes to source code in real time.
-
-* Identifiers are determining statically (using [clj-kondo](https://github.com/borkdude/clj-kondo)) so there are certain types of idenitifers that will not be determinable.
-
-* Identifiers of the interop persuasion are not handled.  Would be nice, huh?
+[When](doc/use-cases.md) this might be useful, and the [fine print](doc/limitations.md).
 
 ## Quick Trial
 
