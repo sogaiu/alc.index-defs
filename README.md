@@ -50,7 +50,7 @@ $ cd /home/alice/a-clj-proj-dir
 $ clj -Sdeps '{:deps {alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs" :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}}' -m alc.index-defs.ctags
 ```
 
-What you need to do to use the file will vary by the editor.
+What is necessary to make use of the result depends on the editor.
 
 I've had varying degrees of success with Emacs, vim, Atom, and VSCode.  In some cases, installation and setup of an appropriate plugin, extension, etc. was necessary.
 
@@ -68,8 +68,10 @@ For `TAGS` (aka etags -- Emacs):
   {
    :etags ; or some other name, :alc.index-defs.etags
    {
-    :extra-deps {sogaiu/alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs"
-                                        :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
+    :extra-deps
+    {sogaiu/alc.index-defs
+      {:git/url "https://github.com/sogaiu/alc.index-defs"
+       :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
     :main-opts ["-m" "alc.index-defs.etags"]
    }
 ```
@@ -82,8 +84,10 @@ For `tags` (aka ctags -- vim, VSCode, Atom, etc.):
   {
    :ctags ; or some other name, :alc.index-defs.ctags
    {
-    :extra-deps {sogaiu/alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs"
-                                        :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
+    :extra-deps
+    {sogaiu/alc.index-defs
+      {:git/url "https://github.com/sogaiu/alc.index-defs"
+       :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
     :main-opts ["-m" "alc.index-defs.ctags"]
    }
 ```
