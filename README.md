@@ -141,17 +141,25 @@ _N.B. The current command line interface is mostly based on passing in a string 
 
 ### About Those Formats...
 
-`tags` and `TAGS` don't quite support the same sort of functionality.
+`tags` and `TAGS` are similar conceptually but differ in various ways.
 
-For example, Emacs uses `TAGS` in such a way so that certain changes don't affect the ability to still locate the identifier in question (e.g. extra code being added doesn't tend to cause lookups of previously existing identifiers to fail).  I haven't seen an editor setup that uses `tags` that does this sort of thing.
+The [Ctags Wikipedia article](https://en.wikipedia.org/wiki/Ctags#Tags_file_formats) gives relatively straight-forward (if somewhat simplified) descriptions of each.  Enough to suggest this sort of project might be possible, but not quite enough on its own :)
 
-`tags`-file lookups may be faster though as many setups refuse to work without the `tags` file being sorted -- which enables a binary search.  Haven't actually measured though, so who knows?
+Emacs uses `TAGS` in such a way so that certain changes don't affect the ability to still locate the identifier in question (e.g. extra code being added doesn't tend to cause lookups of previously existing identifiers to fail).  (I don't think `tags` files store the type of information one could use to achieve this end well.)
 
-In general, producing `TAGS` is more involved, but not all of the fields need to be "filled in".  Finding adequate docs for it was harder than for `tags`, but examining source and testing were sufficient to determine enough details to make something that seems to work ok.
+Some editors setups won't work without a sorted `tags`-file.
+
+`TAGS` groups index information by file, while `tags` is essentially one big list.
+
+`TAGS` supports the notion of "including" files, while AFAIK, `tags` doesn't.
+
+In general, producing `TAGS` is more involved.  It could be even more involved than what this project does, but thankfully, not all of the fields need to be "filled in" -- at least not for things to work in Emacs.
+
+Finding adequate docs for `TAGS` was harder than for `tags`, but examining source and testing were sufficient to determine enough details to make something that seems to work ok.
 
 ## Notes
 
-Tree-sitter looks like promising, especially from the perspective of indexing speed -- both initial and incremental updtaing.
+Tree-sitter looks promising, especially from the perspective of indexing speed -- both initial and incremental updtaing.
 
 ## Acknowledgments
 
