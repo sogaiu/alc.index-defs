@@ -1,6 +1,6 @@
 # Use Cases
 
-* Want to easily navigate source without firing up a REPL?  For example, just downloaded a project and don't have it running?  Or may be sometimes you don't want to have to start a REPL just to examine some code paths?  [1]
+* Want to easily navigate source without firing up a REPL?  For example, just downloaded a project and don't have it running?  Or may be sometimes you don't want to have to start a REPL just to examine some code paths? [1]
 
 * The editor setup you're using doesn't support jumping to definitions within dependencies?
 
