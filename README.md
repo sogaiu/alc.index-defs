@@ -123,11 +123,11 @@ Note that:
 
 ### How Does It Work?
 
-All of the heavy-lifting is done by [clj-kondo's analysis capability](https://github.com/borkdude/clj-kondo/analysis).  
+All of the heavy-lifting is done by [clj-kondo's analysis capability](https://github.com/borkdude/clj-kondo/analysis).
 
-To determine exactly what bits of code are to be analyzed, a classpath is required.  By default, the files `shadow-cljs.edn`, `deps.edn`, `project.clj`, and `build.boot` are searched for.  If any of these is found, the command that uses it (e.g. `shadow-cljs`, `clj`, `lein`, or `boot`) is invoked to compute a classpath.
+To determine exactly what bits of code are to be analyzed, a classpath is required.  By default, a search is performed for the files `shadow-cljs.edn`, `deps.edn`, `project.clj`, and `build.boot`.  The first one located is used to decide which command to employ for classpath computation.  The corresponding commands are: `shadow-cljs`, `clj`, `lein`, and `boot`.
 
-Sometimes auto-detection doesn't produced the desired result, in which case one of the following options can be specified:
+Sometimes auto-detection doesn't produce the desired result, in which case one of the following options can be specified:
 
 * `:method` - one of `:shadow-cljs`, `:clj`, `:lein`, or `:boot`
 * `:paths` - a classpath string, e.g.`"src:/home/user/.m2/repository/com/cognitect/transit-java/0.8.337/transit-java-0.8.337.jar"` or `"src/clj/clojure"`
@@ -147,7 +147,7 @@ In general, producing `TAGS` is more involved, but not all of the fields need to
 
 ## Notes
 
-Tree-sitter looks like a promising thing, especially from the perspective of indexing speed -- both initial and incremental updtaing.
+Tree-sitter looks like promising, especially from the perspective of indexing speed -- both initial and incremental updtaing.
 
 ## Acknowledgments
 
