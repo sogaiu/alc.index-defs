@@ -156,7 +156,7 @@ Note that:
    $ clj -A:ctags
    ```
 
-## Try it out
+### Try it out
 
 1. Open a Clojure file from the indexed project
 
