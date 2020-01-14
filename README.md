@@ -112,105 +112,12 @@ Note that:
 
 * Sticking to generating just the one you need may work better as some editor setups try to do "clever" things and end up reading in the wrong file.
 
-## Use with Emacs
+## Use With Specific Editors
 
-### Setup
-
-1. Ensure some appropriate `deps.edn` has been edited appropriately (see above).
-
-
-2. Index a Clojure code base:
-
-   ```
-   $ cd /home/alice/a-clj-proj-dir
-   $ clj -A:etags
-   ```
-
-3. Wait a bit for indexing to complete -- note that the initial indexing run via `clj`, dependencies may be downloaded so the time-to-wait before `tags` / `TAGS` files are created will likely be longer than otherwise.
-
-### Try it out
-
-1. Launch Emacs and open a Clojure file from the project
-
-2. Put point / cursor on an identifier you want to look up
-
-3. `M-.` -OR- `M-x xref-find-definitions`
-
-4. Likely you'll be asked to specify a location for the TAGS file -- there should be one in the project root now, so specify it.
-
-5. On the happy path, the definition should be in front of you, or there should be a buffer with a list of possible definitions to choose from.
-
-* Check out the top of [Looking Up Identifiers](https://www.gnu.org/software/emacs/manual/html_node/emacs/Looking-Up-Identifiers.html) for other related commands.
-
-## Use with vim (and derivatives?)
-
-### Setup
-
-1. Ensure some appropriate `deps.edn` has been edited appropriately (see above).
-
-
-2. Index a Clojure code base:
-
-   ```
-   $ cd /home/alice/a-clj-proj-dir
-   $ clj -A:ctags
-   ```
-
-### Try it out
-
-1. Open a Clojure file from the indexed project
-
-2. Put your cursor within an identifier and press `Ctrl-]`
-
-(`Ctrl-O` seems to go back.)
-
-
-## Use with VSCode
-
-### Setup
-
-1. Ensure some appropriate `deps.edn` has been edited appropriately (see above).
-
-
-2. Index a Clojure code base:
-
-   ```
-   $ cd /home/alice/a-clj-proj-dir
-   $ clj -A:ctags
-   ```
-
-3. Install an appropriate extension.  I had luck with [ctagsx](https://github.com/jtanx/ctagsx).
-
-4. It might be that editting `settings.json` to also contain:
-
-   ```
-    "[clojure]": {
-      "editor.wordSeparators": "\t ()\"':,;~@#$%^&{}[]`"
-    }
-   ```
-
-   will yield better behavior when selecting an identifier by double-clicking.  If your setup uses [Calva](https://github.com/BetterThanTomorrow/calva), it might not be necessary.
-
-### Try it out
-
-1. Launch VSCode and open a folder for a Clojure project
-
-2. Put the cursor on an identifier you want to look up and double-click to select it
-
-3. Do one of the following:
-
-   * Press `F12`
-   * Choose `Go -> Go to Definition` via the menu
-   * From the context-sensitive menu, choose `Go to Definition`
-   * Enter `Go to Definition` into your friendly command palette
-
-(The `Go Back` command is helpful for going back to where you were before.  You can look up what the keybinding is via the command palette, but it may be one of: `Ctrl Minus`, `Ctrl Alt Minus`, `Alt Left`)
-
-## Use with Atom
-
-The basic setup procedure is similar to the other cases.  However, the built-in `Go to Declaration` appears [broken](https://github.com/atom/symbols-view/issues/159#issuecomment-544118286).
-
-I'm interested in getting this working reliably but I got stuck the last time I tried.
+* [Atom](doc/atom.md) - TLDR; Atom itself seems to need fixing
+* [Emacs](doc/emacs.md)
+* [vim](doc/vim.md)
+* [VSCode](doc/vscode.md)
 
 ## Technical Details
 
