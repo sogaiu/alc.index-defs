@@ -115,6 +115,11 @@ Curious about some [technical details](doc/technical-details.md)?  No?  That's w
 
 Tree-sitter looks promising, especially from the perspective of indexing speed -- both initial and incremental updtaing.
 
+## Related
+
+* [clindex](https://github.com/jpmonettas/clindex)
+* [lein-codeindex](https://github.com/sanel/lein-codeindex)
+
 ## Acknowledgments
 
 * borkdude - clj-kondo and more
