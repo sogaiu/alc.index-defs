@@ -7,12 +7,13 @@
 
 (defn add-paths-to
   [entries unzip-root]
-  (let [split-path-re #"(?x)    # free-form
-                        ^       # start with
-                        ([^:]+) # a path to a file (.jar)
-                        :       # separated by a colon
-                        ([^:]+) # and then a path contained within
-                        $       # and nothing else "]
+  (let [split-path-re #"(?x)          # free-form
+                        ^             # start with
+                        (([a-zA-Z]:)? # may be windows...
+                         ([^:]+))     # a path to a file (.jar)
+                        :             # separated by a colon
+                        ([^:]+)       # and then a path contained within
+                        $             # and nothing else "]
     (map
       (fn [{:keys [:filename] :as entry}]
         (let [[_ jar-path sub-path]
