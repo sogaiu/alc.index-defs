@@ -3,17 +3,30 @@
    [alc.index-defs.impl.fs :as aiif]
    [alc.index-defs.impl.seek :as aiis]
    [clojure.java.io :as cji]
+   [clojure.string :as cs]
    [edamame.core :as ec]))
+
+(def windows?
+  (cs/starts-with? (System/getProperty "os.name")
+    "Windows"))
 
 (defn add-paths-to
   [entries unzip-root]
-  (let [split-path-re #"(?x)          # free-form
-                        ^             # start with
-                        (([a-zA-Z]:)? # may be windows...
-                         ([^:]+))     # a path to a file (.jar)
-                        :             # separated by a colon
-                        ([^:]+)       # and then a path contained within
-                        $             # and nothing else "]
+  (let [split-path-re (if windows?
+                        ;; has a drive letter colon prefix
+                        #"(?x)             # free-form
+                          ^                # start with
+                          ([a-zA-Z]:[^:]+) # a path to a file (.jar)
+                          :                # separated by a colon
+                          ([^:]+)          # and then a path contained within
+                          $                # and nothing else "
+                        ;; doesn't have a drive letter colon prefix
+                        #"(?x)    # free-form
+                          ^       # start with
+                          ([^:]+) # a path to a file (.jar)
+                          :       # separated by a colon
+                          ([^:]+) # and then a path contained within
+                          $       # and nothing else ")]
     (map
       (fn [{:keys [:filename] :as entry}]
         (let [[_ jar-path sub-path]
