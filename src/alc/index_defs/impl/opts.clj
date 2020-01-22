@@ -19,7 +19,7 @@
     :as opts}]
   (when verbose
     (println "* checking specified options")
-    (println "  input: " opts))
+    (println "  input:" opts))
   (let [out-name (cond
                    out-name
                    out-name
@@ -46,5 +46,5 @@
                :overwrite overwrite
                :verbose verbose)]
     (when verbose
-      (println "  output: " opts))
+      (println "  output:" opts))
     opts)))
