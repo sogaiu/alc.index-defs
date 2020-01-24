@@ -125,3 +125,4 @@ Tree-sitter looks promising, especially from the perspective of indexing speed -
 * borkdude - clj-kondo and more
 * PEZ - VSCode assistance
 * Saikyun - discussion and testing
+* taylorwood - clj.native-image internals
