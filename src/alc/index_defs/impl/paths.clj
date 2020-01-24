@@ -4,17 +4,22 @@
    [clojure.java.shell :as cjs]
    [clojure.string :as cs]))
 
+;; windows 10 PATHEXT defautl?:
+;;   .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
 (defn which
   [bin-name]
-  ;; from taylorwood
-  (let [paths
-        (cs/split (System/getenv "PATH")
-          (re-pattern (java.io.File/pathSeparator)))]
+  (let [paths (cs/split (or (System/getenv "PATH") "")
+                (re-pattern (java.io.File/pathSeparator)))
+        ;; for windows
+        pathexts (cs/split (or (System/getenv "PATHEXT") "")
+                   (re-pattern (java.io.File/pathSeparator)))]
+    ;; adapted work by taylorwood
     (first
       (for [path (distinct paths)
-            :let [file (cji/file path bin-name)]
-            :when (.exists file)]
-        (.getAbsolutePath file)))))
+            pathext pathexts
+            :let [exe-file (cji/file path (str bin-name pathext))]
+            :when (.exists exe-file)]
+        (.getAbsolutePath exe-file)))))
 
 (defmulti get-lint-paths
   (fn [method proj-root opts]
