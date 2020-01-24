@@ -25,7 +25,6 @@
   (fn [method proj-root opts]
     method))
 
-;; XXX: windows - boot.exe
 (defmethod get-lint-paths :boot
   [_ proj-root {:keys [:verbose]}]
   (let [boot-path (which "boot")
@@ -43,7 +42,6 @@
     (cs/trim out)))
 
 ;; XXX: any benefit in using tools.deps directly?
-;; XXX: windows - cmd-clj.exe (others?)
 (defmethod get-lint-paths :clj
   [_ proj-root {:keys [:verbose]}]
   (let [clj-path (which "clj")
@@ -80,7 +78,6 @@
         "  custom-path:\n" custom-path "\n"))
     (cs/trim out)))
 
-;; XXX: windows - lein.cmd
 (defmethod get-lint-paths :lein
   [_ proj-root {:keys [:verbose]}]
   (let [lein-path (which "lein")
@@ -98,8 +95,6 @@
     (cs/trim out)))
 
 ;; XXX: yarn over npx -- provide way to force one?
-;; XXX: windows - yarn.cmd
-;; XXX: windows - npx.cmd
 (defmethod get-lint-paths :shadow-cljs
   [_ proj-root {:keys [:verbose]}]
   (let [yarn-lock (cji/file proj-root "yarn.lock")
