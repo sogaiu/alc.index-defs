@@ -4,7 +4,7 @@
    [clojure.java.shell :as cjs]
    [clojure.string :as cs]))
 
-;; windows 10 PATHEXT defautl?:
+;; windows 10 PATHEXT default?:
 ;;   .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
 (defn which
   [bin-name]
