@@ -24,14 +24,14 @@ Create a `TAGS` file:
 
 ```
 $ cd /home/alice/a-clj-proj-dir
-$ clj -Sdeps '{:deps {alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs" :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}}' -m alc.index-defs.etags
+$ clj -Sdeps '{:deps {alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs" :sha "4d26c6109fad267839ba10e7144660193a8be9a2"}}}' -m alc.index-defs.etags
 ```
 
 Create a `tags` file:
 
 ```
 $ cd /home/alice/a-clj-proj-dir
-$ clj -Sdeps '{:deps {alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs" :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}}' -m alc.index-defs.ctags
+$ clj -Sdeps '{:deps {alc.index-defs {:git/url "https://github.com/sogaiu/alc.index-defs" :sha "4d26c6109fad267839ba10e7144660193a8be9a2"}}}' -m alc.index-defs.ctags
 ```
 
 What is necessary to make use of the result depends on the editor.
@@ -55,7 +55,7 @@ For `TAGS` (aka etags -- Emacs):
     :extra-deps
     {sogaiu/alc.index-defs
       {:git/url "https://github.com/sogaiu/alc.index-defs"
-       :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
+       :sha "4d26c6109fad267839ba10e7144660193a8be9a2"}}
     :main-opts ["-m" "alc.index-defs.etags"]
    }
 ```
@@ -71,7 +71,7 @@ For `tags` (aka ctags -- vim, VSCode, Atom, etc.):
     :extra-deps
     {sogaiu/alc.index-defs
       {:git/url "https://github.com/sogaiu/alc.index-defs"
-       :sha "d4e4536ca9ef2057436cc299cfe8c0e3946fc00e"}}
+       :sha "4d26c6109fad267839ba10e7144660193a8be9a2"}}
     :main-opts ["-m" "alc.index-defs.ctags"]
    }
 ```
@@ -114,6 +114,10 @@ Curious about some [technical details](doc/technical-details.md)?  No?  That's w
 ## Notes
 
 Tree-sitter looks promising, especially from the perspective of indexing speed -- both initial and incremental updtaing.
+
+## Known Issues
+
+* Indexing code bases that use versions of Clojure <= 1.8 may not work.  Current work-around is to invoke the code from a directory (sibling, likely safest) with no Clojure code in it and use the `:proj-dir` option to specify the target for indexing.
 
 ## Related
 
