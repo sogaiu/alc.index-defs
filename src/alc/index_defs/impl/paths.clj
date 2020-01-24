@@ -41,15 +41,22 @@
         "  boot-path:\n" boot-path "\n"))
     (cs/trim out)))
 
-;; XXX: any benefit in using tools.deps directly?
+(def windows?
+  (cs/starts-with? (System/getProperty "os.name")
+    "Windows"))
+
 (defmethod get-lint-paths :clj
   [_ proj-root {:keys [:verbose]}]
-  (let [clj-path (which "clj")
+  (let [clj-path (if windows? "powershell alias"
+                   (which "clj"))
         _ (assert clj-path
             "failed to find clj")
         {:keys [:err :exit :out]}
-        (cjs/with-sh-dir proj-root
-          (cjs/sh clj-path "-Spath"))]
+        (if windows?
+          (cjs/with-sh-dir proj-root
+            (cjs/sh "powershell" "-command" "clj" "-Spath"))
+          (cjs/with-sh-dir proj-root
+            (cjs/sh clj-path "-Spath")))]
     (assert (= 0 exit)
       (str "`clj -Spath` failed to determine classpath\n"
         "  exit\n" exit "\n"
