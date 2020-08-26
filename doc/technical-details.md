@@ -12,7 +12,7 @@ Sometimes auto-detection doesn't produce the desired result, in which case one o
 * `:paths` - a classpath string, e.g.`"src:/home/user/.m2/repository/com/cognitect/transit-java/0.8.337/transit-java-0.8.337.jar"` or `"src/clj/clojure"`
 * `:cp-command` - a vector describing a command to invoke to determine a classpath, e.g. `["yarn" "--slient" "shadow-cljs" "classpath"]`
 
-_N.B. The current command line interface is mostly based on passing in a string representation of a Clojure map (e.g. `'{:method :clj :overwrite true}'`).  This might change.
+_N.B._ The current command line interface is mostly based on passing in a string representation of a Clojure map (e.g. `'{:method :clj :overwrite true}'`).  This might change.
 
 ## About Those Formats...
 
